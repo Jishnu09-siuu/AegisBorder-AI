@@ -9,6 +9,7 @@ from typing import Dict, Any, Tuple, Optional
 ## degrade to skin-chrominance geometry. All failures are silent by design.
 _MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
 _YUNET_PATH = os.path.join(_MODEL_DIR, "face_detection_yunet_2023mar.onnx")
+_SFACE_PATH = os.path.join(_MODEL_DIR, "face_recognition_sface_2021dec.onnx")
 
 # Safely initialize cascade classifier if available in current cv2 build
 face_cascade = None
@@ -26,6 +27,19 @@ try:
         yunet = cv2.FaceDetectorYN_create(_YUNET_PATH, "", (320, 320), 0.5, 0.3, 5000)
 except Exception:
     yunet = None
+
+sface = None
+sface_align = None
+try:
+    # cv2 5.0's FaceRecognizerSF wrapper is broken (match() returns distance 1.0
+    # for identical vectors; feature() drops state). Use alignCrop (deterministic)
+    # for alignment and run the embedding through raw cv2.dnn instead.
+    if hasattr(cv2, 'FaceRecognizerSF_create') and os.path.exists(_SFACE_PATH):
+        sface_align = cv2.FaceRecognizerSF_create(_SFACE_PATH, "", cv2.FaceRecognizerSF_FR_COSINE)
+        sface = cv2.dnn.readNetFromONNX(_SFACE_PATH)
+except Exception:
+    sface = None
+    sface_align = None
 
 def detect_face_by_skin_and_geometry(image_np: np.ndarray) -> Optional[Dict[str, Any]]:
     """Geometry & skin chrominance based face detector fallback"""
@@ -82,7 +96,8 @@ def detect_face(image_np: np.ndarray) -> Optional[Dict[str, Any]]:
                 crop = image_np[y1:y2, x1:x2]
                 return {
                     "bbox": {"x": x, "y": y, "width": w, "height": h},
-                    "crop_rgb": crop
+                    "crop_rgb": crop,
+                    "yunet_row": faces[0]
                 }
         except Exception:
             pass
@@ -190,8 +205,36 @@ def check_liveness_and_anti_spoofing(image_np: np.ndarray) -> Dict[str, Any]:
         "sharpness_index": float(round(laplacian_var, 2))
     }
 
+def _sface_embedding(image_np: np.ndarray, face: Dict[str, Any]) -> Optional[np.ndarray]:
+    """Extract SFace 128-d embedding from a YuNet-detected face. Needs the raw
+    source image (for alignCrop) plus the full detection row.
+
+    cv2 5.0's FaceRecognizerSF wrapper is broken, so alignment comes from the
+    wrapper (deterministic) but the embedding is a raw cv2.dnn forward, and
+    similarity is computed as a plain cosine. ponytail: raw-dnn SFace embeddings
+    are L2 only via the model's own ops; if discrimination drifts on real faces,
+    switch to onnxruntime (deterministic, faster)."""
+    if sface is None or sface_align is None or "yunet_row" not in face:
+        return None
+    try:
+        bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        aligned = sface_align.alignCrop(bgr, face["yunet_row"])
+        blob = cv2.dnn.blobFromImage(aligned, scalefactor=1.0 / 128.0,
+                                     size=(112, 112), mean=(127.5, 127.5, 127.5), swapRB=True)
+        sface.setInput(blob)
+        emb = sface.forward()
+        v = np.asarray(emb).reshape(-1).astype(np.float64)
+        norm = np.linalg.norm(v)
+        return v / norm if norm > 1e-12 else None
+    except Exception:
+        return None
+
 def verify_faces(doc_image_np: np.ndarray, live_image_np: np.ndarray) -> Dict[str, Any]:
-    """Module 4: Face Verification & Liveness Matching"""
+    """Module 4: Face Verification & Liveness Matching
+
+    Primary: SFace neural embedder for real identity comparison.
+    Fallback: multiscale histogram descriptor when SFace/YuNet unavailable.
+    """
     doc_face = detect_face(doc_image_np)
     live_face = detect_face(live_image_np)
 
@@ -204,6 +247,29 @@ def verify_faces(doc_image_np: np.ndarray, live_image_np: np.ndarray) -> Dict[st
             "live_face_detected": bool(live_face),
             "liveness": {"liveness_score": 0.0, "is_live": False, "moire_artifact_detected": False, "sharpness_index": 0.0, "note": "Face detection failed — liveness check skipped"},
         }
+
+    emb1 = _sface_embedding(doc_image_np, doc_face)
+    emb2 = _sface_embedding(live_image_np, live_face)
+    if emb1 is not None and emb2 is not None:
+        try:
+            cosine_sim = float(np.dot(emb1, emb2))
+            similarity = max(0.0, min(100.0, cosine_sim * 100.0))
+            match_score = float(round(similarity, 1))
+            is_matched = match_score >= 65.0
+            liveness_result = check_liveness_and_anti_spoofing(live_face["crop_rgb"])
+            return {
+                "match_score": match_score,
+                "is_matched": is_matched,
+                "doc_face_bbox": doc_face["bbox"],
+                "live_face_bbox": live_face["bbox"],
+                "doc_face_detected": True,
+                "live_face_detected": True,
+                "liveness": liveness_result,
+                "embedder": "sface",
+                "confidence": "HIGH" if match_score > 80 else ("MODERATE" if is_matched else "MISMATCH")
+            }
+        except Exception:
+            pass
 
     vec1 = compute_face_feature_vector(doc_face["crop_rgb"])
     vec2 = compute_face_feature_vector(live_face["crop_rgb"])
@@ -223,5 +289,6 @@ def verify_faces(doc_image_np: np.ndarray, live_image_np: np.ndarray) -> Dict[st
         "doc_face_detected": True,
         "live_face_detected": True,
         "liveness": liveness_result,
+        "embedder": "histogram",
         "confidence": "HIGH" if match_score > 80 else ("MODERATE" if is_matched else "MISMATCH")
     }

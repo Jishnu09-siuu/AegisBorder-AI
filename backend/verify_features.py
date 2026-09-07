@@ -102,6 +102,22 @@ check("feature vector 128-dim-ish", compute_face_feature_vector(face_img).ndim >
 res = verify_faces(face_img, face_img)
 check("1:1 match score", 0 <= res.get("match_score", -1) <= 100)
 check("liveness/PAD suite", "liveness_score" in check_liveness_and_anti_spoofing(face_img))
+try:
+    from data.samples import get_preset_by_id
+    import cv2, base64
+    def _npf(_id):
+        _p = get_preset_by_id(_id)
+        if "image_np" in _p:
+            return _p["image_np"]
+        return cv2.imdecode(np.frombuffer(base64.b64decode(_p["image_b64"].split(",", 1)[1]), np.uint8), cv2.IMREAD_COLOR)
+    _gen = _npf("preset_genuine_passport")
+    _tam = _npf("preset_photo_tampered")
+    _self = verify_faces(_gen, _gen)
+    check("sface identical -> matched", _self.get("is_matched") is True and _self.get("match_score", 0) > 90, str(_self)[:80])
+    _cross = verify_faces(_gen, _tam)
+    check("tampered avatar -> not inflated", _cross.get("match_score", 100) < 70, str(_cross)[:80])
+except Exception as _e:
+    check("sface preset regression", False, str(_e)[:80])
 
 print("== Section 6: Unified Risk Decision Engine ==")
 from services.risk_engine import calculate_risk_score
