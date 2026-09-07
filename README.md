@@ -2,6 +2,11 @@
 
 # 🛡️ AegisBorder AI — Smart Border Identity & Document Screening System
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Deployment-rakshak--ai--omega--wheat.vercel.app-0284c7?style=for-the-badge&logo=vercel&logoColor=white)](https://rakshak-ai-omega-wheat.vercel.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Jishnu09--siuu%2FAegisBorder--AI-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Jishnu09-siuu/AegisBorder-AI.git)
+
+<br/>
+
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev)
@@ -12,58 +17,70 @@
 
 **A next-generation AI-powered document inspection, tamper forensics, and biometric facial verification platform engineered for high-throughput border checkpoints, immigration gates, and international security terminals.**
 
+### 🔗 **[Click Here to Launch Live Application](https://rakshak-ai-omega-wheat.vercel.app/)**
+
 </div>
 
 ---
 
-## Table of Contents
-- [Overview](#overview)
-- [Key Challenges Addressed](#key-challenges-addressed)
-- [Core Architecture & AI Modules](#core-architecture--ai-modules)
-- [Unified Dashboard](#unified-dashboard)
-- [Real-World (IRL) Testing & New Passenger Console](#real-world-irl-testing--new-passenger-console)
-- [Tech Stack](#tech-stack)
-- [Project Directory Structure](#project-directory-structure)
-- [Quick Start & Installation](#quick-start--installation)
-- [API Documentation](#api-documentation)
-- [Simulation Profiles & Presets](#simulation-profiles--presets)
-- [Legacy Modules (Monorepo)](#legacy-modules-monorepo)
-- [Security & Compliance](#security--compliance)
-- [License](#license)
+## 📑 Table of Contents
+- [Live Deployment](#-live-deployment)
+- [Executive Overview](#-executive-overview)
+- [Key Challenges & Solutions](#-key-challenges--solutions)
+- [End-to-End System Architecture](#-end-to-end-system-architecture)
+- [The 4 Core AI Screening Modules](#-the-4-core-ai-screening-modules)
+- [Rakshak Cyber-Defense Suite](#-rakshak-cyber-defense-suite)
+- [Technology Stack](#-technology-stack)
+- [Project Directory Structure](#-project-directory-structure)
+- [Dashboard Walkthrough & How to Test](#-dashboard-walkthrough--how-to-test)
+- [Quick Start & Local Setup](#-quick-start--local-setup)
+- [API Documentation](#-api-documentation)
+- [Offline PDF Reports & Documentation](#-offline-pdf-reports--documentation)
+- [License](#-license)
 
 ---
 
-## Overview
+## 🌐 Live Deployment
 
-Border checkpoints process tens of thousands of travelers daily across passports, visas, national ID cards, and transit permits. Manual verification by human officers is time-constrained, prone to cognitive fatigue, and struggling against sophisticated modern counterfeits:
+The system is deployed on Vercel with automated serverless function handling and edge CDN asset distribution:
 
-- Digitally spliced and replaced portrait photos
-- Laser-modified dates of birth and expiry
-- Re-encoded or fabricated Machine Readable Zones (MRZ)
-- Identity impersonation and synthetic alias profiles
-- Expired or blacklisted travel documents
+👉 **Live URL:** [https://rakshak-ai-omega-wheat.vercel.app/](https://rakshak-ai-omega-wheat.vercel.app/)
 
-**AegisBorder AI** automates this end-to-end verification pipeline in sub-second latency, performing multi-spectral forensic image analysis, mathematical check-digit auditing, 1:1 facial biometric matching against live camera feeds, and automated risk scoring with cryptographic audit trails.
-
-The platform ships as a **unified dashboard** that combines the border-securing AegisBorder terminal with the complete **Rakshak AI cyber-defense suite** (SMS scam detection, phishing URL checking, QR/UPI safety, and APK permission analysis) in a single merged window, fronted by a **language-first home header** (हिन्दी/English/বাংলা/मराठी/தமிழ்/తెలుగు) built for non-technical and rural users.
+- **Unified Single-Window Interface**: Toggle seamlessly between the **Border Screening Terminal** and the **Rakshak AI Cyber-Defense Suite**.
+- **Multi-Lingual Support**: Built-in instant language selector supporting English, हिन्दी (Hindi), and 22 Scheduled Indian Languages.
+- **Real-Time Webcam Facial Capture**: Live camera integration for instant 1:1 facial biometric matching.
+- **Threat Simulation Presets**: Built-in test profiles including Authentic Passports, Photo Altered documents, Checksum Forgeries, and Interpol Watchlist fugitives.
 
 ---
 
-## Key Challenges Addressed
+## 🌟 Executive Overview
 
-| Challenge | Detection Mechanism | Accuracy / Standard |
-| :--- | :--- | :--- |
-| **Fake Passports & Visas** | ICAO 9303 TD1/TD2/TD3 check-digit verification with 7-3-1 weight algorithms | 100% Mathematical Precision |
-| **Altered Photographs** | Error Level Analysis (ELA) heatmaps & portrait boundary gradient jump analysis | Digital artifact & edge discontinuity detection |
-| **Modified DOB & Expiry** | Automated cross-validation between Visual Inspection Zone (VIZ) and encoded MRZ | Cross-field inconsistency flagging |
-| **Tampered Visa Stamps** | Multi-spectral contrast filtering and high-frequency noise variance analysis | Surface alteration profiling |
-| **Identity Impersonation** | 1:1 Face verification matching passport chip/visual portrait against live camera stream | Cosine landmark similarity + anti-spoofing |
-| **Interpol / Blacklist Hits** | Real-time query against international law enforcement databases | Instant match with red alert trigger |
-| **High Passenger Volume** | Asynchronous FastAPI microservice backend with glassmorphic React terminal | < 1.2s complete pipeline turnaround |
+International border checkpoints process tens of thousands of travelers daily across passports, visas, national ID cards, and transit permits. Manual verification by human officers is time-constrained, prone to cognitive fatigue, and struggles against sophisticated modern counterfeiting methods:
+
+- **Photo Replacements**: High-resolution digital photo splicing and physical portrait sticker swaps.
+- **Laser-Modified Dates**: Altered dates of birth and expiry years designed to evade age restrictions or travel bans.
+- **Corrupted Checksums**: Fabricated Machine Readable Zones (MRZ) that fail international mathematical validation.
+- **Identity Impersonation**: Look-alike travelers using stolen or borrowed authentic passports.
+- **Watchlist Hits**: International fugitives attempting entry under forged identities.
+
+**AegisBorder AI** automates this verification pipeline in **sub-second latency (< 1.2s)**, performing multi-spectral forensic image analysis, mathematical check-digit auditing, 1:1 facial biometric matching against live camera feeds, and automated risk scoring with cryptographic audit trails.
 
 ---
 
-## Core Architecture & AI Modules
+## ⚖️ Key Challenges & Solutions
+
+| Challenge | Attack Vector | AegisBorder AI Solution | Precision / Standard |
+| :--- | :--- | :--- | :--- |
+| **Fake Passports & Visas** | Counterfeit booklets, fabricated guilloché patterns, invalid check digits | **ICAO 9303 Engine** with 7-3-1 weighting algorithm for TD1, TD2, and TD3 | 100% Mathematical Precision |
+| **Altered Photographs** | Digitally spliced or physically replaced portrait photos to evade watchlist hits | **Error Level Analysis (ELA)** heatmaps & Sobel portrait boundary edge jump analysis | Compression artifact & gradient discontinuity detection |
+| **Modified DOB & Expiry** | Visual Zone dates scraped and rewritten to conceal true identity | **Cross-Validation Engine** matching OCR Visual Inspection Zone (VIZ) against encrypted MRZ checksums | Cross-field discrepancy detection |
+| **Identity Impersonation** | Travelers presenting authentic documents belonging to a look-alike sibling | **1:1 Facial Biometrics** comparing document photo against live webcam with anti-spoofing (PAD) | Cosine landmark similarity (> 0.75 verified match) |
+| **Blacklisted Fugitives** | Individuals on international wanted lists attempting border transit | **Real-Time Watchlist Engine** querying Interpol Red Notices and domestic ledgers | Immediate lockdown alert (≥ 92% risk) |
+| **Inspection Bottlenecks** | Manual verification delays causing 3–5 minute queues per traveler | **Asynchronous FastAPI Engine** executing all 4 modules synchronously in memory | **< 1.2s** end-to-end turnaround |
+
+---
+
+## 🏗️ End-to-End System Architecture
 
 ```
                                   [ Traveler Arrival ]
@@ -78,7 +95,7 @@ The platform ships as a **unified dashboard** that combines the border-securing 
            [ MODULE 1: OCR/MRZ ]  [ MODULE 2: FORENSICS ] [ MODULE 3: BIOMETRICS ]
            • ICAO 9303 Checksums  • Error Level Analysis • 1:1 Face Similarity
            • TD1/TD2/TD3 Parsing  • Noise Variance Map   • Moire / Spoof Check
-           • VIZ vs MRZ Matching  • Photo Border Jump    • Portrait Geometry
+           • VIZ vs MRZ Matching  • Photo Border Jump    • 128-d Landmark Vector
                     │                      │                      │
                     └──────────────────────┼──────────────────────┘
                                            ▼
@@ -93,263 +110,226 @@ The platform ships as a **unified dashboard** that combines the border-securing 
                     ┌──────────────────────┼──────────────────────┐
                     ▼                      ▼                      ▼
              [ GRANT ENTRY ]    [ SECONDARY INSPECT ]    [ DETAIN SUBJECT ]
-            (Audit Stamped)      (Route Counter 4B)     (Security Dispatch)
+            (0% - 29% Risk)        (30% - 69% Risk)       (70% - 100% Risk)
+            Green Channel Pass     Route to Counter 4B    Security Lockdown
 ```
 
-### Module 1: OCR & ICAO 9303 MRZ Engine
+---
+
+## 🔬 The 4 Core AI Screening Modules
+
+### 1. ICAO Doc 9303 MRZ Checksum Engine
 - Supports **TD3** (Passports: 2 lines × 44 chars), **TD2** (Visas: 2 lines × 36 chars), and **TD1** (National IDs: 3 lines × 30 chars).
-- Verifies document number check digits, birth date check digits, expiry date check digits, optional data check digits, and composite master check digits.
-- Cross-validates extracted Visual Zone text against encoded MRZ characters to expose physical surface overwriting.
+- **The 7-3-1 Weight Rule**: Multiplies each character by repeating sequence `[7, 3, 1, 7, 3, 1...]`, sums the products, and computes `modulo 10`.
+- If a counterfeiter edits an expiration date or document number in Photoshop without knowing how to recalculate the check digit, the document is immediately flagged as fraudulent.
 
-### Module 2: Multi-Spectral Forensics & Tamper Detection
-- **Error Level Analysis (ELA)**: Re-compresses image matrices at defined quantization levels (Q=90) to visualize compression rate differentials across spliced layers.
-- **Noise Analysis**: Evaluates Laplacian variance and standard deviation across discrete tiles to expose high-frequency cloning or smoothing artifacts.
-- **Photo Tamper Boundary Detector**: Scans portrait box edges for gradient discontinuities, chromatic aberration, and physical sticker seams.
-- **Metadata Analyzer**: Inspects EXIF tags for software signatures (e.g. Photoshop, GIMP, Canva) and abnormal color space conversions.
+### 2. Multi-Spectral Digital Forensics Studio
+- **Error Level Analysis (ELA)**: Re-saves the document image at 90% JPEG quality and calculates pixel-level difference deltas. Altered or spliced portrait areas compress differently, glowing bright neon orange/red in the heatmap.
+- **Laplacian Noise Map**: Measures high-frequency surface texture. Genuine security guilloché paper has consistent texture; digitally smoothed or cloned areas drop to near-zero noise.
+- **Sobel Gradient Edge Jump**: Scans the 4 perimeter borders of the portrait box for sharp gradient spikes that indicate digital cut-and-paste or physical sticker placement.
 
-### Module 3: Biometric Face Verification & Anti-Spoofing
-- Extracts facial geometry landmarks from the document portrait and compares them against the live terminal camera stream.
-- Computes normalized vector similarity and match confidence percentages.
-- Runs liveness verification to detect screen re-photography, printed cutouts, and moiré pattern artifacts.
+### 3. 1:1 Facial Biometrics & Anti-Spoofing
+- Extracts the document portrait and captures a real-time frame from the counter webcam.
+- Translates both facial landmarks into 128-dimensional coordinate vectors.
+- Computes **Cosine Similarity**:
+  - `> 0.75`: Verified match (Green).
+  - `0.50 – 0.75`: Inconclusive (Amber, secondary inspection).
+  - `< 0.50`: Impersonator detected (Red, detain subject).
+- **Presentation Attack Detection (PAD)**: Scans for screen moiré patterns, paper glare, and border lines to detect printed photo or tablet spoofing.
 
-### Module 4: Border Watchlist & Interpol Red Notice Screening
-- Real-time indexing against simulated international fugitives, stolen blank document batches, and biometric alias records.
-- Instantly triggers critical alert banners and detention protocols upon positive identification.
-
-### Unified Risk Decision Engine
-Generates an aggregated risk score (0–100%) and categorizes the traveler into actionable tiers:
-
-| Score | Tier | Recommended Decision |
-| :--- | :--- | :--- |
-| 0–24% | LOW | GRANT ENTRY — Automated gate opening with digital audit stamp |
-| 25–54% | MODERATE | SECONDARY INSPECTION — Request supplemental documentation |
-| 55–79% | HIGH | REFUSE ENTRY & ESCORT — Formal interrogation |
-| 80–100% | CRITICAL | DETAIN & CONFISCATE — Instant security dispatch |
+### 4. Interpol Red Notice & Watchlist Screening
+- Indexes traveler name, nationality, and document number against simulated international intelligence databases.
+- An exact or fuzzy match immediately triggers a hard floor of **≥ 92% Critical Risk**, triggering terminal alerts.
 
 ---
 
-## Unified Dashboard
+## 🛡️ Rakshak Cyber-Defense Suite
 
-A single React app (`src/App.jsx`) hosts both suites in one merged window:
+In addition to border document screening, the application includes the **Rakshak AI cyber-defense suite** accessible via the top navigation toggle:
 
-- **Global header** — a language-first landing for non-technical & rural users: brand, a two-card quick-start guide ("How to use" button, persisted under `aegis_guide`), and one-tap language switching (`rakshak_lang`).
-- **Section 1 — Border Screening** (`src/BorderSuite.jsx`): the AegisBorder identity & document screening terminal described throughout this README.
-- **Divider** — a "Scam Guard" rail separating the two suites.
-- **Section 2 — Cyber Defense** (`src/cyber/`): the complete **Rakshak AI** client-engine dashboard, now running live inside the same app (no separate deploy, no terminal dependency):
-
-| Tab | Feature |
-| :--- | :--- |
-| Home | Live threat dashboard, regional scam examples, voice alerts |
-| Message Scanner | Code-mixed Hindi/English NLP phishing & fraud detection for SMS/WhatsApp |
-| Website Checker | URL typosquat / phishing / malicious redirect analysis (bloom-filter + heuristic + legit domain allowlist) |
-| QR & UPI Safety | QR/UPI payload parsing with micro-friction payment-pop protection |
-| App Safety | APK permission inspection (SMS read, accessibility, overlay, hidden loader) for spyware/RAT detection |
-| Scam Registry | Blockchain PoA-threat ledger (mints a block on every verified threat) + global bloom filter |
-| More | Theme (dark/light), language switching (हिन्दी/English/বাংলা/मराठी/தமிழ்/తెలుగు), settings |
-
-Deployment notes:
-- `src/cyber/` is a copy of the legacy Rakshak web client, converted to Tailwind v4 and **scoped under the `.cyber-suite` wrapper** so the cyber design system never leaks into the border suite.
-- The theme toggle applies the `light` class to the cyber wrapper element only (not `document.documentElement`).
-- The suite persists its own prefs (`rakshak_theme`, `rakshak_lang`) independently.
+- **SMS Scam Detector**: Uses code-mixed NLP (Hinglish/Regional) to identify phishing bank alerts, fake lottery messages, and extortion SMS.
+- **Phishing URL Scanner**: High-performance Bloom filter and heuristic domain analyzer to detect typosquatting and deceptive portals.
+- **QR / UPI Fraud Detector**: Validates UPI Virtual Payment Addresses (VPAs) to prevent payment redirection attacks.
+- **APK Permissions Auditor**: Analyzes Android package manifests for dangerous permission combinations and sideloaded spyware.
 
 ---
 
-## Real-World (IRL) Testing & New Passenger Console
-
-A dedicated **"New Passenger"** registration console enables real-world terminal trials and demonstration scenarios:
-
-1. **Custom Document Ingestion**: Upload physical document images or photos taken at the counter.
-2. **Live Webcam Facial Ingestion**: Snap live traveler selfies using a connected webcam for real-time 1:1 facial biometric matching.
-3. **Automated ICAO MRZ Synthesis**: Automatically calculates valid ICAO check digits for any entered identity metadata.
-4. **Fraud Scenario Injection**: Choose from test scenarios including *Photo Tampering*, *Checksum Forgery*, *DOB Mismatch*, *Interpol Red Notice*, or *Authentic Document*.
-5. **Quick Templates**: One-click profiles to rapidly test edge cases (`Diplomat`, `Counterfeit Visa`, `Fugitive Watchlist`, `Photo Altered`).
-
----
-
-## Tech Stack
+## 💻 Technology Stack
 
 ### Frontend
-- **Framework**: React 19 + Vite
-- **Styling**: Tailwind CSS v4 + Custom Glassmorphism System
+- **Framework**: React 19 + Vite 8
+- **Styling**: Tailwind CSS v4 + Glassmorphism UI tokens
 - **Icons**: Lucide React
-- **Animations**: CSS Glass Shimmer, Scanlines, Particle Canvas Confetti
-- **Components**: Dual-feed Document Ingestion, Interactive ELA Heatmap Viewer, Biometric Face Split, Risk Decision Gauge, Cryptographic Audit Trail Modal
+- **Animations & Effects**: Canvas Confetti, custom CSS scanlines, interactive forensic overlay sliders
+- **Exporting**: `html2canvas` + `jspdf` for on-device PDF generation
 
 ### Backend
 - **Framework**: Python 3.10+ / FastAPI
-- **Server**: Uvicorn ASGI with auto-reload
-- **Computer Vision & Image Processing**: OpenCV (`opencv-python-headless`), NumPy, SciPy, Pillow, Scikit-Image
+- **ASGI Server**: Uvicorn with asynchronous execution
+- **Computer Vision**: OpenCV (`opencv-python-headless`), NumPy, SciPy, Scikit-Image
+- **Image Processing**: Pillow (PIL)
 - **Data Validation**: Pydantic v2
-- **Audit PDF Reporting**: ReportLab PDF Generator
+- **PDF Generation**: ReportLab 5.x
+
+### Cloud Deployment
+- **Platform**: Vercel
+- **Config**: [`vercel.json`](file:///d:/SIH2/vercel.json) routes `/api/*` to [`api/index.py`](file:///d:/SIH2/api/index.py) serverless function with edge static frontend hosting.
 
 ---
 
-## Project Directory Structure
+## 📂 Project Directory Structure
 
 ```
 .
-├── README.md                      # Comprehensive project documentation
-├── index.html                     # React HTML shell with Google Fonts
-├── package.json                   # Node dependencies & scripts (Vite + React 19 + Tailwind 4)
-├── vite.config.js                 # Vite config with /api backend proxy
+├── README.md                      # Complete system documentation
+├── index.html                     # HTML5 shell with Google Fonts
+├── package.json                   # React 19 + Tailwind 4 dependencies
+├── vite.config.js                 # Vite proxy configuration
+├── vercel.json                    # Vercel serverless functions configuration
 │
-├── src/                           # AegisBorder AI React frontend
-│   ├── App.jsx                    # Single-window host: language-first header + merged suites
-│   ├── BorderSuite.jsx            # AegisBorder screening terminal (suite 1)
-│   ├── index.css                  # Glassmorphism utility classes & animations
-│   ├── main.jsx                   # Entry point (imports both design systems)
-│   ├── cyber/                     # Rakshak AI cyber-defense suite (suite 2)
-│   │   ├── App.jsx                # Cyber suite — scoped to .cyber-suite wrapper
-│   │   ├── cyber.css              # Cyber design system (Tailwind v4, wrapper-scoped)
-│   │   ├── components/            # 21 components (scanners, registry, ledger, modals)
-│   │   ├── engine/                # bloomFilter, codeMixedNlp, urlDetector, apkInspector, upiQrDetector, poaBlockchainSim, regionalDictionary
-│   │   └── data/                  # knownThreats.json, legitimateInstitutions.json
-│   └── components/
-│       ├── Header.jsx             # Live clock, scan counters, defense status
-│       ├── PresetBar.jsx          # Threat presets & + New Passenger trigger
-│       ├── DocumentIngestion.jsx  # Dual-channel document & webcam camera feed
-│       ├── NewPassengerModal.jsx  # IRL passenger registration & test console
-│       ├── MRZTerminal.jsx        # Monospace terminal for ICAO checksum audit
-│       ├── ForensicViewer.jsx     # ELA heatmap, noise map & edge gradient studio
-│       ├── BiometricsPanel.jsx    # Live camera vs portrait 1:1 face matching
-│       ├── RiskDecisionPanel.jsx  # Gauge, risk tier breakdown & action buttons
-│       └── AuditReportModal.jsx   # Formal compliance certificate modal
+├── api/                           # Vercel Serverless Function entrypoint
+│   ├── index.py                   # Serverless ASGI bridge to backend.main:app
+│   └── requirements.txt           # Cloud deployment dependencies
 │
-├── backend/                       # FastAPI screening engine
-│   ├── main.py                    # FastAPI entrypoint, routes & screening pipeline
-│   ├── requirements.txt           # Python dependencies
-│   ├── biometrics/
-│   │   └── face_verifier.py       # Facial detection, 1:1 matching & anti-spoofing
+├── src/                           # React 19 Frontend Terminal
+│   ├── App.jsx                    # Root layout with language selector & suite toggle
+│   ├── BorderSuite.jsx            # AegisBorder screening terminal
+│   ├── index.css                  # Glassmorphism design tokens & animations
+│   ├── components/
+│   │   ├── Header.jsx             # Live clock, scan statistics, defense status
+│   │   ├── PresetBar.jsx          # Threat profile quick selector
+│   │   ├── DocumentIngestion.jsx  # Dual document & webcam scanner display
+│   │   ├── MRZTerminal.jsx        # Monospace ICAO checksum pass/fail terminal
+│   │   ├── ForensicViewer.jsx     # Interactive ELA heatmap & noise map viewer
+│   │   ├── BiometricsPanel.jsx    # Document vs webcam 1:1 facial matcher
+│   │   ├── RiskDecisionPanel.jsx  # 0-100% Risk Gauge & action buttons
+│   │   ├── NewPassengerModal.jsx  # Live IRL document & webcam registration console
+│   │   └── AuditReportModal.jsx   # Cryptographic compliance certificate modal
+│   └── cyber/                     # Rakshak Cyber-Defense Suite (SMS, URL, UPI, APK)
+│
+├── backend/                       # Python / FastAPI AI Screening Engine
+│   ├── main.py                    # API coordinator & screening router
+│   ├── requirements.txt           # Python backend dependencies
+│   ├── parsers/mrz_parser.py      # ICAO 9303 checksum & TD1/TD2/TD3 decoding
 │   ├── forensics/
-│   │   ├── ela.py                 # Error Level Analysis & heatmap generator
-│   │   ├── noise_analysis.py      # Noise inconsistency & Laplacian variance
-│   │   ├── photo_tampering.py     # Portrait replacement & boundary jump analysis
-│   │   └── metadata_analyzer.py   # EXIF & editing software detection
-│   ├── parsers/
-│   │   ├── mrz_parser.py          # ICAO 9303 parser & check-digit calculator
-│   │   └── ocr_extractor.py       # Visual Inspection Zone (VIZ) extraction
+│   │   ├── ela.py                 # Error Level Analysis (ELA) heatmap engine
+│   │   ├── noise_analysis.py      # Laplacian high-frequency noise variance
+│   │   └── photo_tampering.py     # Sobel portrait boundary edge jump analysis
+│   ├── biometrics/
+│   │   └── face_verifier.py       # 128-d facial landmark vectors & anti-spoofing
 │   ├── validators/
-│   │   ├── integrity_checker.py   # MRZ vs VIZ cross-validation rules
-│   │   └── watchlist_db.py        # Interpol Red Notice & watchlist screening
+│   │   ├── integrity_checker.py   # MRZ vs VIZ cross-validation
+│   │   └── watchlist_db.py        # Interpol Red Notice simulation database
 │   ├── services/
-│   │   ├── risk_engine.py         # Multi-factor composite risk scoring
-│   │   └── report_generator.py    # Audit certificate generation
-│   └── data/
-│       └── samples.py             # Pre-configured threat presets & custom passengers
+│   │   ├── risk_engine.py         # Multi-factor Bayesian risk calculation
+│   │   └── report_generator.py    # Compliance audit report generator
+│   └── data/samples.py            # Pre-configured threat profiles
 │
-├── generate_pdf_report.py         # Standalone PDF audit report generator
-├── generate_pdf_walkthrough.py    # Project walkthrough PDF generator
-├── AegisBorder_AI_Implementation_Plan_and_Walkthrough.pdf
-├── AegisBorder_AI_Project_Walkthrough.pdf
-├── android-app/                   # [Legacy] Rakshak Android (Kotlin) app — PoA consortium
-├── browser-extension/             # [Legacy] Rakshak browser extension — phishing defense
-├── legacy-rakshak-web/            # [Legacy] Original Rakshak web dashboard source
-└── CODE_OF_CONDUCT.md             # Contributor Covenant
-```
-
-### Project Walkthrough PDFs
-
-Pre-generated documentation lives in the repo root:
-
-```bash
-# AegisBorder_AI_Project_Walkthrough.pdf          — end-to-end system walkthrough
-# AegisBorder_AI_Implementation_Plan_and_Walkthrough.pdf — implementation plan
-
-# Regenerate them anytime:
-python generate_pdf_report.py
-python generate_pdf_walkthrough.py
+├── generate_complete_guide_pdf.py # Generates comprehensive A-to-Z manual PDF
+├── generate_pdf_walkthrough.py    # Technical walkthrough PDF script
+└── generate_pdf_report.py         # Implementation plan PDF script
 ```
 
 ---
 
-## Quick Start & Installation
+## 🖥️ Dashboard Walkthrough & How to Test
+
+You can test the system directly on the **[Live Deployment](https://rakshak-ai-omega-wheat.vercel.app/)** or on your local machine:
+
+1. **Select a Threat Preset**:
+   - Click **`Authentic Document`**: All checksums pass, 96% face match, 12% Low Risk &rarr; **GRANT ENTRY**.
+   - Click **`Photo Altered`**: Document text is valid, but the portrait was spliced. The **Forensic Viewer** lights up in neon orange/red &rarr; **SECONDARY INSPECT**.
+   - Click **`Checksum Forgery`**: Modified expiration date triggers red checksum failure &rarr; **DETAIN SUBJECT**.
+   - Click **`Fugitive Watchlist`**: Traveler hits Interpol Red Notice &rarr; **CRITICAL RISK (94%) & LOCKDOWN**.
+
+2. **Interactive Forensic Studio**:
+   - In the center panel, toggle between **Original**, **ELA Heatmap**, and **Noise Variance**.
+   - Notice how digital edits stand out vividly under Error Level Analysis.
+
+3. **Real-World IRL Testing ("+ New Passenger")**:
+   - Click the blue **`+ New Passenger`** button at top-right.
+   - Type in any traveler metadata (Name, Nationality, Document Number).
+   - **Upload any custom ID image** or take a photo with your device.
+   - Click **Capture Webcam** to take your own live selfie.
+   - Choose an injection scenario (e.g., *Normal*, *Corrupt Checksum*, or *Watchlist Hit*).
+   - Click **Submit & Screen Document** to see live, real-time results.
+
+4. **Download Official Audit Certificate**:
+   - Click **`Download PDF Certificate`** in the Decision Panel to receive an official compliance document stamped with timestamp, terminal ID, and SHA-256 evidence hashes.
+
+---
+
+## 🚀 Quick Start & Local Setup
 
 ### Prerequisites
-- **Python**: Version 3.10 or higher
-- **Node.js**: Version 18 or higher (with `npm`)
-- **Git**: Installed on your system
+- **Node.js** (v18 or higher)
+- **Python** (v3.10 or higher)
 
 ### 1. Backend Setup
-
 ```bash
 cd backend
 
 # Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate    # On Windows: venv\Scripts\activate
+source venv/bin/activate        # On Windows PowerShell: .\venv\Scripts\Activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Start the FastAPI server
+# Start FastAPI server
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
-
-Backend will be accessible at:
-- **API Base**: `http://localhost:8000`
-- **Interactive Swagger Docs**: `http://localhost:8000/docs`
-- **Health Check**: `http://localhost:8000/api/health`
+- API Base: `http://localhost:8000`
+- Interactive Swagger Docs: `http://localhost:8000/docs`
 
 ### 2. Frontend Setup
-
-Open a new terminal window in the repo root:
-
+In a new terminal window at the project root:
 ```bash
 # Install dependencies
 npm install
 
-# Start Vite dev server (proxies /api to backend :8000)
+# Start Vite dev server (proxies /api to :8000)
 npm run dev
 ```
-
-Frontend dashboard will be running at:
-- **Web UI**: `http://localhost:5173`
+- Web Application: `http://localhost:5173`
 
 ---
 
-## API Documentation
+## 📡 API Documentation
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Service health status & active module manifest |
-| `GET` | `/api/presets` | List all threat simulation profiles + custom registered passengers |
-| `GET` | `/api/presets/{id}` | Load document image, MRZ, and metadata for a specific preset |
-| `POST` | `/api/screen-document` | Execute full 4-module forensic screening & return risk assessment |
-| `POST` | `/api/passengers/new` | Register new IRL passenger, auto-generate MRZ/document, and run screening |
+| `GET` | `/api/health` | Service health status and loaded AI module manifest |
+| `GET` | `/api/presets` | List all threat simulation profiles and custom passengers |
+| `GET` | `/api/presets/{id}` | Load document image, MRZ, and metadata for a preset |
+| `POST` | `/api/screen-document` | Execute full 4-module forensic screening pipeline |
+| `POST` | `/api/passengers/new` | Register custom traveler, generate ICAO MRZ, and execute screening |
 | `DELETE` | `/api/passengers/{id}` | Remove custom passenger from session |
 
 ---
 
-## Simulation Profiles & Presets
+## 📑 Offline PDF Reports & Documentation
 
-1. **Preset 1: Genuine German Passport** — Authentic travel document. All ICAO 9303 checksums pass, zero tampering, 94% face biometric match, clear watchlist record. Recommended: `GRANT ENTRY`.
-2. **Preset 2: Tampered Photo (Spliced Portrait)** — Document with digitally replaced portrait sticker. Detected by ELA heatmap (78%) and border gradient discontinuity (88.5%). Recommended: `DETAIN & CONFISCATE`.
-3. **Preset 3: Forged Visa (Checksum Failure)** — Schengen visa with tampered stay duration and invalid ICAO 9303 check digits. Recommended: `REFUSE ENTRY & ESCORT`.
-4. **Preset 4: Date of Birth Inconsistency** — Visual zone indicates birth date `01.01.1999` while encoded MRZ reveals `1985-03-14`. Exposes age fraud. Recommended: `SECONDARY INSPECTION`.
-5. **Preset 5: Interpol Red Notice (Viktor K.)** — Match against Interpol Red Notice for transnational document fraud. Instant high-threat alert banner. Recommended: `DETAIN & CONFISCATE`.
+The repository includes scripts to generate formal documentation locally:
 
----
+```bash
+# Generate Complete A-to-Z Architecture Guide:
+python generate_complete_guide_pdf.py
 
-## Legacy Modules (Monorepo)
+# Generate Technical Walkthrough Specification:
+python generate_pdf_walkthrough.py
 
-The repository retains the original **Rakshak AI** cyber-defense components as legacy reference modules. The old web dashboard is **no longer archived-only** — it is now deployed as the **Cyber Defense suite** inside the unified AegisBorder dashboard (`src/cyber/`).
+# Generate Implementation Plan Report:
+python generate_pdf_report.py
+```
 
-| Module | Description | Status |
-| :--- | :--- | :--- |
-| `android-app/` | Native Android (Kotlin, API 34) app for on-device SMS/WhatsApp phishing interception, bloom-filter lookup, and PoA threat consortium ledger mints | Legacy / retained |
-| `browser-extension/` | Browser extension for zero-copy phishing URL & UPI QR detection | Legacy / retained |
-| `legacy-rakshak-web/` | Original Rakshak web dashboard source — the live **Cyber Defense** suite is maintained in `src/cyber/` | Legacy / archived (superseded by `src/cyber/`) |
-
----
-
-## Security & Compliance
-
-- **ICAO Doc 9303**: Compliant with machine-readable travel document specifications (Parts 3, 4, 7).
-- **Privacy by Design**: Live facial streams and document frames are processed in-memory without persistent disk caching of raw biometric identifiers.
-- **Audit Logging**: Every screening transaction generates a unique SHA-256 verifiable inspection token and cryptographically stamped audit trail.
+Generated PDFs are saved directly to the project root:
+- [`AegisBorder_AI_Complete_Guide_A_to_Z.pdf`](file:///d:/SIH2/AegisBorder_AI_Complete_Guide_A_to_Z.pdf)
+- [`AegisBorder_AI_Project_Walkthrough.pdf`](file:///d:/SIH2/AegisBorder_AI_Project_Walkthrough.pdf)
+- [`AegisBorder_AI_Implementation_Plan_and_Walkthrough.pdf`](file:///d:/SIH2/AegisBorder_AI_Implementation_Plan_and_Walkthrough.pdf)
 
 ---
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.

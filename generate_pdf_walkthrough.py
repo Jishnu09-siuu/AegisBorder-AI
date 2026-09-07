@@ -522,5 +522,7 @@ def build_walkthrough_pdf(filename):
     print(f"Generated complete walkthrough PDF: {filename}")
 
 if __name__ == "__main__":
-    out_file = sys.argv[1] if len(sys.argv) > 1 else "/Users/biswarupdas/SIH/AegisBorder_AI_Project_Walkthrough.pdf"
+    default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "AegisBorder_AI_Project_Walkthrough.pdf")
+    out_file = sys.argv[1] if len(sys.argv) > 1 else default_path
     build_walkthrough_pdf(out_file)
+

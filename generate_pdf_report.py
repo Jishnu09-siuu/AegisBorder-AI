@@ -448,5 +448,7 @@ def build_pdf(filename):
     print(f"Successfully generated PDF at: {filename}")
 
 if __name__ == "__main__":
-    out_pdf = sys.argv[1] if len(sys.argv) > 1 else "/Users/biswarupdas/SIH/AegisBorder_AI_Implementation_Plan_and_Walkthrough.pdf"
+    default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "AegisBorder_AI_Implementation_Plan_and_Walkthrough.pdf")
+    out_pdf = sys.argv[1] if len(sys.argv) > 1 else default_path
     build_pdf(out_pdf)
+
