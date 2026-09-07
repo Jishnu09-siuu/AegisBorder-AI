@@ -159,14 +159,14 @@ export default function GuideChat() {
   return (
     <>
       <button onClick={() => setOpen(!open)}
-        className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#FF9933] via-white to-[#138808] text-blue-900 shadow-xl transition-transform hover:scale-105 lg:bottom-6"
+        className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-navy-800 to-navy-950 text-white shadow-xl transition-transform hover:scale-105 lg:bottom-6"
         aria-label="Open help guide" title="Help guide">
         {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
       </button>
 
       {open && (
         <div className="fixed bottom-36 right-4 z-40 flex w-[92vw] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl lg:bottom-20">
-          <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-900 px-4 py-3 text-white">
+          <div className="flex items-center gap-2 border-b border-slate-200 bg-navy-900 px-4 py-3 text-white">
             <Shield className="h-4 w-4 text-amber-400" />
             <div>
               <div className="text-sm font-bold">Rakshak AI Guide</div>
@@ -179,7 +179,7 @@ export default function GuideChat() {
               <div key={i} className={m.who === 'bot' ? 'mr-8' : 'ml-8'}>
                 <div className={m.who === 'bot'
                   ? 'rounded-xl rounded-tl-sm bg-slate-100 px-3 py-2 text-sm text-slate-800'
-                  : 'rounded-xl rounded-tr-sm bg-blue-700 px-3 py-2 text-sm text-white'}>
+                  : 'rounded-xl rounded-tr-sm bg-navy-800 px-3 py-2 text-sm text-white'}>
                   {m.text}
                 </div>
               </div>
@@ -189,7 +189,7 @@ export default function GuideChat() {
           <div className="flex gap-1.5 overflow-x-auto border-t border-slate-100 px-2 py-2">
             {examples.map((q) => (
               <button key={q} onClick={() => ask(q)}
-                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:bg-blue-50">
+                className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:bg-navy-50">
                 {q}
               </button>
             ))}
@@ -198,8 +198,8 @@ export default function GuideChat() {
           <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="flex items-center gap-2 border-t border-slate-100 p-2">
             <input value={input} onChange={(e) => setInput(e.target.value)}
               placeholder={lang === 'hi' ? 'अपना प्रश्न लिखें…' : 'Type your question…'}
-              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" />
-            <button type="submit" aria-label="Send" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white hover:bg-blue-800">
+              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-500 focus:outline-none" />
+            <button type="submit" aria-label="Send" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy-800 text-white hover:bg-navy-900">
               <Send className="h-4 w-4" />
             </button>
           </form>

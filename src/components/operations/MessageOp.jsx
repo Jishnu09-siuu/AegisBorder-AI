@@ -102,14 +102,14 @@ export default function MessageOp({ onBack }) {
           <button
             type="button"
             onClick={() => setKnown(false)}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${!known ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 ${!known ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             <UserX className="h-3.5 w-3.5" /> Unknown sender
           </button>
           <button
             type="button"
             onClick={() => setKnown(true)}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${known ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 ${known ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             <UserCheck className="h-3.5 w-3.5" /> Saved contact
           </button>
@@ -134,7 +134,7 @@ export default function MessageOp({ onBack }) {
               key={i}
               type="button"
               onClick={() => { setKnown(!!ex.known); run(ex.text, !!ex.known); }}
-              className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-left transition-colors hover:border-navy-300 hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700"
             >
               <span className="text-xs font-semibold text-slate-800">{ex.label}</span>
               <span className="mt-1 line-clamp-2 block text-[11px] text-slate-500">{ex.text}</span>
@@ -149,12 +149,12 @@ export default function MessageOp({ onBack }) {
 
         <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
           <button type="button" onClick={() => { setText(''); setDisplay(null); setResult(null); setSavedId(null); }}
-            disabled={!text} className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+            disabled={!text} className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700">
             <Trash2 className="h-3.5 w-3.5" /> Clear
           </button>
           <button type="button" onClick={() => run()}
             disabled={!text.trim() || scanning}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+            className="inline-flex items-center gap-2 rounded-lg bg-navy-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-900 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700">
             {scanning ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Analyzing message…</> : <><Search className="h-4 w-4" aria-hidden="true" /> Analyze Message</>}
           </button>
         </div>

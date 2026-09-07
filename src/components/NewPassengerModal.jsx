@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import {
-  UserPlus, UploadCloud, Camera, AlertTriangle, CheckCircle2,
+  UserPlus, UploadCloud, AlertTriangle, CheckCircle2,
   FileText, User, Calendar, Globe, Hash, AlertOctagon, Shield
 } from 'lucide-react';
 import { Badge, Button } from './ui';
+import CameraCapture from './CameraCapture';
 
 const SCENARIOS = [
   { id: 'none', label: 'Authentic / Clean', desc: 'Valid ICAO check digits, intact photo forensics, clean watchlist', icon: CheckCircle2, color: 'green' },
@@ -23,7 +24,7 @@ const QUICK_TEMPLATES = [
   { title: 'Transnational Watchlist Match', holder_name: 'MARCO ALVAREZ', doc_number: 'E10948291', nationality: 'COL', dob: '1982-11-04', expiry: '2029-11-03', sex: 'Male', document_type: 'Passport', tamper_scenario: 'watchlist', notes: 'Exact watchlist match. For demonstration this target is simulated.' },
 ];
 
-const fieldCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600';
+const fieldCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-navy-500 focus:outline-none focus:ring-1 focus:ring-navy-700';
 const labelCls = 'mb-1 block text-xs font-semibold text-slate-600';
 
 export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated }) {
@@ -35,49 +36,12 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
   });
   const [documentImage, setDocumentImage] = useState(null);
   const [liveImage, setLiveImage] = useState(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const docInputRef = useRef(null);
   const faceInputRef = useRef(null);
-  const videoRef = useRef(null);
 
   if (!isOpen) return null;
-
-  const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCameraActive(false);
-  };
-
-  const startCamera = async () => {
-    setErrorMsg(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCameraActive(true);
-      }
-    } catch {
-      setErrorMsg('Camera access failed. You can upload a photo file instead.');
-      setIsCameraActive(false);
-    }
-  };
-
-  const captureSnapshot = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth || 640;
-      canvas.height = videoRef.current.videoHeight || 480;
-      canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      setLiveImage(canvas.toDataURL('image/jpeg', 0.92));
-      stopCamera();
-    }
-  };
 
   const handleUpload = (e, setter) => {
     const file = e.target.files?.[0];
@@ -122,11 +86,11 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Register new passenger">
-      <button className="fixed inset-0 bg-slate-900/50" aria-label="Close" onClick={onClose} />
+      <button className="fixed inset-0 bg-navy-950/60" aria-label="Close" onClick={onClose} />
       <div className="relative mx-auto my-6 w-full max-w-4xl rounded-xl bg-white shadow-2xl border border-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-navy-50 text-navy-800">
               <UserPlus className="h-5 w-5" />
             </div>
             <div>
@@ -163,12 +127,12 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {QUICK_TEMPLATES.map((tmpl, idx) => (
                 <button key={idx} type="button" onClick={() => { setFormData({ ...formData, ...tmpl }); setActiveMode('form'); }}
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-left hover:border-blue-400 hover:bg-blue-50">
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-left hover:border-navy-300 hover:bg-navy-50">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-900">{tmpl.title}</span>
                     <Badge color="slate">{tmpl.nationality}</Badge>
                   </div>
-                  <div className="mt-1 font-mono text-xs font-bold text-blue-700">{tmpl.holder_name}</div>
+                  <div className="mt-1 font-mono text-xs font-bold text-navy-700">{tmpl.holder_name}</div>
                   <p className="mt-1 line-clamp-2 text-xs text-slate-500">{tmpl.notes}</p>
                 </button>
               ))}
@@ -200,31 +164,18 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
                 <div className="rounded-lg border border-slate-200 p-4">
                   <div className="flex items-center justify-between">
                     <label className={labelCls} style={{ marginBottom: 0 }}>Passenger face / photo (optional)</label>
-                    {!isCameraActive ? (
-                      <button type="button" onClick={startCamera} className="rounded-md border border-slate-300 px-2 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100">
-                        <Camera className="mr-1 inline h-3.5 w-3.5" />Webcam
-                      </button>
-                    ) : (
-                      <button type="button" onClick={captureSnapshot} className="rounded-md bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white">Snap Photo</button>
-                    )}
                   </div>
                   <div className="mt-2 flex min-h-[130px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50">
-                    {isCameraActive ? (
-                      <div className="relative w-full">
-                        <video ref={videoRef} autoPlay playsInline className="h-[130px] w-full rounded object-cover" />
-                        <button type="button" onClick={stopCamera} className="absolute right-2 top-2 rounded bg-slate-900/70 px-1.5 py-0.5 text-[10px] text-white">Cancel</button>
-                      </div>
-                    ) : liveImage ? (
+                    {liveImage ? (
                       <div className="flex flex-col items-center gap-2">
                         <img src={liveImage} alt="Passenger photo" className="max-h-[110px] rounded object-contain" />
                         <button type="button" onClick={() => setLiveImage(null)} className="text-xs text-red-600 underline">Remove</button>
                       </div>
                     ) : (
-                      <button type="button" onClick={() => faceInputRef.current?.click()} className="p-4 text-center text-slate-500">
-                        <Camera className="mx-auto mb-1 h-7 w-7" />
-                        <span className="text-sm font-medium text-slate-700">Upload portrait photo</span>
-                        <span className="block text-xs text-slate-400">or use the Webcam button above</span>
-                      </button>
+                      <div className="py-3 text-center">
+                        <CameraCapture onCapture={setLiveImage} />
+                        <button type="button" onClick={() => faceInputRef.current?.click()} className="mt-1 text-xs font-semibold text-navy-700 hover:underline">Upload portrait photo</button>
+                      </div>
                     )}
                   </div>
                   <input type="file" ref={faceInputRef} onChange={(e) => handleUpload(e, setLiveImage)} accept="image/*" className="hidden" />
@@ -266,7 +217,7 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {COMMON_COUNTRIES.map((c) => (
                       <button key={c} type="button" onClick={() => setFormData({ ...formData, nationality: c })}
-                        className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold ${formData.nationality === c ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-300 text-slate-500'}`}>
+                        className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold ${formData.nationality === c ? 'border-navy-800 bg-navy-50 text-navy-700' : 'border-slate-300 text-slate-500'}`}>
                         {c}
                       </button>
                     ))}
@@ -301,9 +252,9 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
                     const selected = formData.tamper_scenario === sc.id;
                     return (
                       <button key={sc.id} type="button" onClick={() => setFormData({ ...formData, tamper_scenario: sc.id })}
-                        className={`rounded-lg border p-3 text-left ${selected ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' : 'border-slate-200 bg-slate-50 hover:border-slate-300'}`}>
+                        className={`rounded-lg border p-3 text-left ${selected ? 'border-navy-800 bg-navy-50 ring-1 ring-navy-800' : 'border-slate-200 bg-slate-50 hover:border-slate-300'}`}>
                         <div className="flex items-center gap-2">
-                          <Icon className={`h-4 w-4 ${selected ? 'text-blue-700' : 'text-slate-400'}`} />
+                          <Icon className={`h-4 w-4 ${selected ? 'text-navy-700' : 'text-slate-400'}`} />
                           <span className="text-xs font-bold text-slate-800">{sc.label}</span>
                         </div>
                         <p className="mt-1 text-[11px] leading-tight text-slate-500">{sc.desc}</p>

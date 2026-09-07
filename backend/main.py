@@ -266,10 +266,10 @@ def screen_document(payload: ScreeningRequest):
 
     # MODULE 1: OCR & MRZ EXTRACTION
     extracted_data = extract_document_data(np_img, raw_text_hint=raw_mrz)
-    mrz_data = extracted_data.get("mrz") or parse_mrz_text(raw_mrz or "")
+    mrz_data = (extracted_data.get("mrz") or parse_mrz_text(raw_mrz or "")) or {}
     
     # If VIZ is empty but MRZ exists, synthesize VIZ from MRZ or text hint
-    viz_data = extracted_data.get("viz")
+    viz_data = extracted_data.get("viz") or {}
     if preset_data and preset_data.get("tamper_text"):
         # For preset with modified DOB in VIZ
         viz_data = {

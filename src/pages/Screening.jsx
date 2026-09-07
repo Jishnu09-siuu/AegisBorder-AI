@@ -9,17 +9,18 @@ import { apiPresets, apiPresetDetail, apiScreenDocument, apiDeletePassenger } fr
 import { addToHistory, updateRecordStatus, tierMeta } from '../lib/store';
 import { toast } from '../components/Toast';
 import NewPassengerModal from '../components/NewPassengerModal';
+import CameraCapture from '../components/CameraCapture';
 import AuditReport from '../components/AuditReport';
 import { speakAlert } from '../lib/voiceAlert';
 import { useT } from '../i18n';
 
-const STEPS = ['Document', 'Information', 'Face', 'Analysis', 'Result'];
+const STEPS = ['step_document', 'step_information', 'step_face_short', 'step_analysis_short', 'step_result'];
 
 function StepCard({ children, step, title, desc, id }) {
   return (
     <Card id={id} className="p-5">
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-sm font-extrabold text-blue-700">{step}</div>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-sm font-extrabold text-white">{step}</div>
         <div>
           <h2 className="text-sm font-bold text-slate-900">{title}</h2>
           {desc && <p className="text-xs text-slate-500">{desc}</p>}
@@ -57,7 +58,7 @@ export default function Screening({ focus = 'document' }) {
   const [showReport, setShowReport] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showMrz, setShowMrz] = useState(false);
-  const videoRef = useRef(null);
+  const [docCamOn, setDocCamOn] = useState(false);
   const fileRef = useRef(null);
   const liveFileRef = useRef(null);
   const confettiFiredRef = useRef(false);
@@ -103,9 +104,9 @@ export default function Screening({ focus = 'document' }) {
         setMrzText('');
       }
       refreshPresets();
-      toast(`${holderName} removed from registered passengers.`, { type: 'info', title: 'Passenger deleted' });
+      toast(`${holderName} ${t('removed_from_passengers')}`, { type: 'info', title: t('passenger_deleted') });
     } catch (err) {
-      toast(err.message || 'Could not remove passenger.', { type: 'error', title: 'Delete failed' });
+      toast(err.message || t('could_not_remove_passenger'), { type: 'error', title: t('delete_failed') });
     }
   }, [activePreset, refreshPresets]);
 
@@ -124,17 +125,17 @@ export default function Screening({ focus = 'document' }) {
       setRecordId(null);
       setStep(0);
     } catch (e) {
-      setError(e.message || 'Failed to load scenario');
+      setError(e.message || t('failed_to_load_scenario'));
     } finally {
       setLoading(false);
     }
-  }, [presets]);
+  }, [presets, t]);
 
   const runScreening = useCallback(async (liveOverride) => {
     const doc = documentImage;
     const face = liveOverride ?? liveImage;
     if (!doc && !mrzText.trim()) {
-      setError('Add a document image or paste the MRZ string to continue.');
+      setError(t('need_document'));
       return;
     }
     setError(null);
@@ -148,16 +149,16 @@ export default function Screening({ focus = 'document' }) {
       applyFocus();
       const tier = data.risk_assessment?.risk_tier || 'LOW';
       toast(
-        tier === 'LOW' ? 'All modules passed — document cleared.' : `${data.risk_assessment?.overall_risk_score}% composite risk (${tier}). Review required.`,
-        { type: tier === 'LOW' ? 'success' : tier === 'CRITICAL' ? 'error' : 'warning', title: 'Screening complete' },
+        tier === 'LOW' ? t('screen_cleared') : t('screen_review', { score: data.risk_assessment?.overall_risk_score, tier }),
+        { type: tier === 'LOW' ? 'success' : tier === 'CRITICAL' ? 'error' : 'warning', title: t('screening_complete') },
       );
     } catch (e) {
-      setError(e.message || 'Screening failed. Is the backend running?');
-      toast('Screening failed — is the backend running?', { type: 'error', title: 'Screening error' });
+      setError(e.message || t('screen_failed'));
+      toast(t('screen_failed'), { type: 'error', title: t('screening_error') });
     } finally {
       setLoading(false);
     }
-  }, [documentImage, liveImage, mrzText, activePreset, uploadName, applyFocus]);
+  }, [documentImage, liveImage, mrzText, activePreset, uploadName, applyFocus, t]);
 
   const handleUpload = (e) => {
     const file = e.target.files?.[0];
@@ -174,48 +175,16 @@ export default function Screening({ focus = 'document' }) {
     }
   };
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        return true;
-      }
-    } catch {
-      setError('Camera access failed. Upload a photo instead.');
-    }
-    return false;
-  };
-
-  const captureLive = async () => {
-    if (!videoRef.current?.srcObject) {
-      await startCamera();
-    }
-    if (videoRef.current?.srcObject) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth || 640;
-      canvas.height = videoRef.current.videoHeight || 480;
-      canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      const b64 = canvas.toDataURL('image/jpeg', 0.9);
-      videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
-      videoRef.current.srcObject = null;
-      setLiveImage(b64);
-      if (result) {
-        runScreening(b64);
-      }
-    }
-  };
-
   const takeAction = (status) => {
     if (recordId) updateRecordStatus(recordId, status);
     setOfficerStatus(status);
     if (status === 'approved') {
       confetti({ particleCount: 100, spread: 75, origin: { y: 0.6 } });
-      toast('Entry granted & stamped. Record logged to the audit ledger.', { type: 'success', title: 'Entry granted' });
+      toast(t('entry_granted_msg'), { type: 'success', title: t('entry_granted') });
     } else if (status === 'review') {
-      toast('Traveler routed to secondary inspection counter.', { type: 'warning', title: 'Secondary inspection' });
+      toast(t('secondary_msg'), { type: 'warning', title: t('secondary_insp') });
     } else {
-      toast('Security dispatched — traveler detained for interrogation.', { type: 'error', title: 'Detained' });
+      toast(t('detained_msg'), { type: 'error', title: t('detained') });
     }
   };
 
@@ -238,71 +207,71 @@ export default function Screening({ focus = 'document' }) {
   }, [step, granted]);
 
   const checks = result ? [
-    { name: 'OCR extraction', state: result?.extracted_data ? 'pass' : 'fail', desc: 'Text and fields read from document image' },
-    { name: 'MRZ check digits', state: mrz?.checksums?.overall_valid ? 'pass' : 'fail', desc: 'ICAO 9303 composite checksums verified' },
-    { name: 'Document validity', state: docVal.is_valid ? 'pass' : 'fail', desc: docVal.is_valid ? 'No discrepancies found' : (docVal.discrepancies || []).map((d) => d.description).join('; ') },
-    { name: 'Tampering forensics', state: forensics.is_photo_tampered === false ? 'pass' : 'fail', desc: forensics.is_photo_tampered ? 'Photo boundary/splicing artifact detected' : 'No tampering artifacts detected' },
-    { name: 'Metadata check', state: forensics.detected_software ? 'warn' : 'pass', desc: forensics.detected_software ? `Editing software detected: ${forensics.detected_software.join(', ')}` : 'No editing software traces' },
-    { name: 'Face biometrics', state: bio.is_matched ? 'pass' : (bio.match_score == null ? 'warn' : 'fail'), desc: bio.match_score == null ? 'No live capture provided' : `Match ${bio.match_score}% · liveness ${bio.liveness?.is_live ? 'confirmed' : 'failed'}` },
-    { name: 'Watchlist', state: watch.flagged ? 'fail' : 'pass', desc: watch.flagged ? (watch.alerts || []).map((a) => a.reason).join('; ') : 'No watchlist match' },
+    { name: t('chk_ocr'), state: result?.extracted_data ? 'pass' : 'fail', desc: t('chk_ocr_desc') },
+    { name: t('chk_mrz'), state: mrz?.checksums?.overall_valid ? 'pass' : 'fail', desc: t('chk_mrz_desc') },
+    { name: t('chk_doc_valid'), state: docVal.is_valid ? 'pass' : 'fail', desc: docVal.is_valid ? t('chk_no_discrep') : (docVal.discrepancies || []).map((d) => d.description).join('; ') },
+    { name: t('chk_forensics'), state: forensics.is_photo_tampered === false ? 'pass' : 'fail', desc: forensics.is_photo_tampered ? t('chk_tamper_detected') : t('chk_no_tamper') },
+    { name: t('chk_metadata'), state: forensics.detected_software ? 'warn' : 'pass', desc: forensics.detected_software ? `${t('editing_software')}: ${forensics.detected_software.join(', ')}` : t('no_editing_traces') },
+    { name: t('chk_face'), state: bio.is_matched ? 'pass' : (bio.match_score == null ? 'warn' : 'fail'), desc: bio.match_score == null ? t('no_live_capture') : `${t('match')} ${bio.match_score}% · ${t('liveness')} ${bio.liveness?.is_live ? t('liveness_ok') : t('liveness_failed')}` },
+    { name: t('chk_watchlist'), state: watch.flagged ? 'fail' : 'pass', desc: watch.flagged ? (watch.alerts || []).map((a) => a.reason).join('; ') : t('no_watchlist_match') },
   ] : [];
 
   const compKeys = [
-    { label: 'MRZ integrity', key: 'integrity_risk' },
-    { label: 'Tamper forensics', key: 'forensic_tamper_risk' },
-    { label: 'Face biometrics', key: 'biometric_mismatch_risk' },
-    { label: 'Watchlist', key: 'watchlist_risk' },
+    { label: t('comp_mrz'), key: 'integrity_risk' },
+    { label: t('comp_forensics'), key: 'forensic_tamper_risk' },
+    { label: t('comp_face'), key: 'biometric_mismatch_risk' },
+    { label: t('comp_watchlist'), key: 'watchlist_risk' },
   ];
 
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <ProgressSteps steps={STEPS} current={step} />
+        <ProgressSteps steps={STEPS.map((s) => t(s))} current={step} />
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           <AlertTriangle className="h-4 w-4 shrink-0" /> {error}
-          <button className="ml-auto text-xs font-semibold underline" onClick={() => setError(null)}>Dismiss</button>
+          <button className="ml-auto text-xs font-semibold underline" onClick={() => setError(null)}>{t('dismiss')}</button>
         </div>
       )}
 
       {step >= 1 && result && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
           {[
-            { id: 1, label: 'MRZ & Validation', icon: FileText },
-            { id: 2, label: 'Biometrics', icon: Camera },
-            { id: 3, label: 'Forensics', icon: FlaskConical },
-            { id: 4, label: 'Risk & Decision', icon: ShieldCheck },
+            { id: 1, label: t('mrz_validation'), icon: FileText },
+            { id: 2, label: t('biometrics'), icon: Camera },
+            { id: 3, label: t('forensics'), icon: FlaskConical },
+            { id: 4, label: t('risk_decision'), icon: ShieldCheck },
           ].map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => { setStep(id); if (id === 3) setShowTechnical(true); }}
               className={cx('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors',
-                step === id ? 'bg-blue-700 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
+                step === id ? 'bg-navy-800 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100')}>
               <Icon className="h-3.5 w-3.5" /> {label}
             </button>
           ))}
-          <span className="ml-auto hidden text-[11px] font-medium text-slate-400 md:inline">Module reviews of the completed screening</span>
+          <span className="ml-auto hidden text-[11px] font-medium text-slate-400 md:inline">{t('module_reviews')}</span>
         </div>
       )}
 
       {step === 0 && (
-        <StepCard step={1} title="Document" desc="Select a test scenario, register a passenger, or upload a real document scan." id="step-document">
+        <StepCard step={1} title={t('step_document')} desc={t('step_document_desc')} id="step-document">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-500">Input source:</span>
-            <Button variant="secondary" onClick={() => setShowRegister(true)}><User className="h-4 w-4" /> Register passenger (IRL)</Button>
+            <span className="text-xs font-bold text-slate-500">{t('input_source')}:</span>
+            <Button variant="secondary" onClick={() => setShowRegister(true)}><User className="h-4 w-4" /> {t('register_passenger')}</Button>
           </div>
 
-          <p className="mb-2 text-xs font-semibold text-slate-500">Built-in demo / test scenarios (simulated)</p>
+          <p className="mb-2 text-xs font-semibold text-slate-500">{t('test_scenarios')}</p>
           {presets.length === 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading scenarios… (backend must be running)
+              <Loader2 className="h-4 w-4 animate-spin" /> {t('loading_scenarios')}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {presets.map((p) => (
                 <button key={p.id} type="button" onClick={() => loadPreset(p.id)}
                   className={cx('group relative rounded-lg border p-3 text-left transition-colors',
-                    activePreset?.id === p.id ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' : 'border-slate-200 bg-slate-50 hover:border-slate-300')}>
+                    activePreset?.id === p.id ? 'border-navy-800 bg-navy-50 ring-1 ring-navy-800' : 'border-slate-200 bg-slate-50 hover:border-slate-300')}>
                   {p.is_custom && (
                     <span
                       role="button"
@@ -329,37 +298,47 @@ export default function Screening({ focus = 'document' }) {
           <div className="my-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-600"><FileText className="mr-1.5 inline h-3.5 w-3.5 text-blue-600" />Document scan</span>
-                <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100">
-                  <UploadCloud className="h-3.5 w-3.5" /> Upload
-                </button>
-                <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" className="hidden" />
+                <span className="text-xs font-bold text-slate-600"><FileText className="mr-1.5 inline h-3.5 w-3.5 text-navy-700" />{t('document_scan')}</span>
+                <div className="flex items-center gap-2">
+                  {!docCamOn && (
+                    <button type="button" onClick={() => setDocCamOn(true)} className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100">
+                      <Camera className="h-3.5 w-3.5" /> {t('scan_with_webcam')}
+                    </button>
+                  )}
+                  <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100">
+                    <UploadCloud className="h-3.5 w-3.5" /> {t('upload')}
+                  </button>
+                  <input type="file" ref={fileRef} onChange={handleUpload} accept="image/*" className="hidden" />
+                </div>
               </div>
               <div className="flex min-h-[190px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50">
                 {documentImage ? (
-                  <img src={documentImage} alt="Document scan" className="max-h-[190px] rounded object-contain" />
+                  <img src={documentImage} alt={t('document_scan')} className="max-h-[190px] rounded object-contain" />
+                ) : docCamOn ? (
+                  <CameraCapture onCapture={(b64) => { setDocumentImage(b64); setUploadName('Webcam capture'); setActivePreset(null); setResult(null); setRecordId(null); setDocCamOn(false); }} onCancel={() => setDocCamOn(false)} className="py-4" />
                 ) : (
-                  <p className="px-4 text-center text-sm text-slate-400">Select a scenario above<br />or upload a document</p>
+                  <p className="px-4 text-center text-sm text-slate-400">{t('select_scenario_hint')}</p>
                 )}
               </div>
             </div>
 
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-600"><Camera className="mr-1.5 inline h-3.5 w-3.5 text-emerald-600" />Live passenger</span>
-                <Button variant="secondary" className="!px-2 !py-1 text-xs" onClick={captureLive}>
-                  <Camera className="h-3.5 w-3.5" /> {liveImage ? 'Retake' : 'Capture / upload'}
-                </Button>
+                <span className="text-xs font-bold text-slate-600"><Camera className="mr-1.5 inline h-3.5 w-3.5 text-emerald-600" />{t('live_passenger')}</span>
+                {liveImage && (
+                  <Button variant="secondary" className="!px-2 !py-1 text-xs" onClick={() => setLiveImage(null)}>
+                    <Camera className="h-3.5 w-3.5" /> {t('retake')}
+                  </Button>
+                )}
               </div>
               <div className="flex min-h-[190px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50">
                 {liveImage ? (
-                  <img src={liveImage} alt="Passenger face" className="max-h-[190px] rounded object-contain" />
+                  <img src={liveImage} alt={t('passenger_face')} className="max-h-[190px] rounded object-contain" />
                 ) : (
-                  <div className="px-4 text-center">
-                    <button onClick={() => liveFileRef.current?.click()} className="flex flex-col items-center gap-1 text-sm text-slate-400 hover:text-slate-600">
-                      <Camera className="h-6 w-6" /> Capture or upload face photo
-                    </button>
-                    <p className="mt-1 text-xs text-slate-400">Optional for demo scenarios (auto-provided)</p>
+                  <div className="w-full px-4 py-3 text-center">
+                    <CameraCapture onCapture={(b64) => { setLiveImage(b64); if (result) runScreening(b64); }} className="mx-auto mb-1" />
+                    <button onClick={() => liveFileRef.current?.click()} className="text-xs font-semibold text-navy-700 hover:underline">{t('upload_photo')}</button>
+                    <p className="mt-1 text-xs text-slate-400">{t('face_optional')}</p>
                   </div>
                 )}
               </div>
@@ -374,13 +353,13 @@ export default function Screening({ focus = 'document' }) {
             </div>
           </div>
 
-          <button onClick={() => setShowMrz(!showMrz)} className="mb-2 flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline">
+          <button onClick={() => setShowMrz(!showMrz)} className="mb-2 flex items-center gap-1.5 text-xs font-bold text-navy-700 hover:underline">
             {showMrz ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            {showMrz ? 'Hide' : 'Show'} raw MRZ string (from physical reader)
+            {showMrz ? t('hide') : t('show')} {t('raw_mrz_string')}
           </button>
           {showMrz && (
             <textarea rows={3} value={mrzText} onChange={(e) => setMrzText(e.target.value)}
-              placeholder="MRZ Line 1&#10;MRZ Line 2" className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs focus:border-blue-600 focus:outline-none" />
+              placeholder="MRZ Line 1&#10;MRZ Line 2" className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-xs focus:border-navy-500 focus:outline-none" />
           )}
 
           <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
@@ -513,7 +492,11 @@ export default function Screening({ focus = 'document' }) {
               )}
 
               <div className="mt-4 flex items-center justify-end gap-3">
-                <Button variant="secondary" onClick={captureLive}><Camera className="h-4 w-4" /> {liveImage ? 'Capture new face & re-run' : 'Add live face & re-run'}</Button>
+                {liveImage ? (
+                  <Button variant="secondary" onClick={() => setLiveImage(null)}><Camera className="h-4 w-4" /> Capture new face & re-run</Button>
+                ) : (
+                  <CameraCapture onCapture={(b64) => { setLiveImage(b64); runScreening(b64); }} className="mx-auto" />
+                )}
                 <Button onClick={() => setStep(3)}>Continue <ArrowRight className="h-4 w-4" /></Button>
               </div>
             </div>
@@ -549,13 +532,13 @@ export default function Screening({ focus = 'document' }) {
                       <span>{label}</span><span>{risk.component_scores?.[key] ?? 0}%</span>
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-blue-600" style={{ width: `${risk.component_scores?.[key] ?? 0}%` }} />
+                      <div className="h-full rounded-full bg-navy-700" style={{ width: `${risk.component_scores?.[key] ?? 0}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <button onClick={() => setShowTechnical(!showTechnical)} className="mt-4 flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:underline">
+              <button onClick={() => setShowTechnical(!showTechnical)} className="mt-4 flex items-center gap-1.5 text-xs font-bold text-navy-700 hover:underline">
                 {showTechnical ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 {showTechnical ? 'Hide' : 'View'} technical forensics detail
               </button>
@@ -685,7 +668,7 @@ export default function Screening({ focus = 'document' }) {
       {step >= 1 && step < 4 && result && (
         <div className="flex justify-end">
           <Button variant="secondary" onClick={() => setStep(step + 1)}>
-            Continue to {STEPS[step + 1]} <ArrowRight className="h-4 w-4" />
+            Continue to {t(STEPS[step + 1])} <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       )}

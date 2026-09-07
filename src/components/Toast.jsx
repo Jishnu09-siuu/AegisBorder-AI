@@ -21,7 +21,7 @@ const STYLES = {
   success: { icon: CheckCircle2, border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-800', chip: 'bg-emerald-600' },
   warning: { icon: AlertTriangle, border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-800', chip: 'bg-amber-500' },
   error: { icon: XCircle, border: 'border-red-200', bg: 'bg-red-50', text: 'text-red-800', chip: 'bg-red-600' },
-  info: { icon: Info, border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-800', chip: 'bg-blue-600' },
+  info: { icon: Info, border: 'border-blue-200', bg: 'bg-navy-50', text: 'text-navy-700', chip: 'bg-blue-600' },
 };
 
 export function ToastHost() {

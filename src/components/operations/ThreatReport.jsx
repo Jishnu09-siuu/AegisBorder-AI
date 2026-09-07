@@ -76,14 +76,14 @@ export default function ThreatReport({ record, onClose }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Threat analysis report">
       <div className="mx-auto flex min-h-full max-w-3xl flex-col">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-900 px-4 py-3 text-white">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-navy-900 px-4 py-3 text-white">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 text-blue-300" />
+            <ShieldAlert className="h-5 w-5 text-navy-300" />
             <span className="text-sm font-bold">Threat Analysis Report</span>
             <Badge color={meta.color}>{meta.label}</Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={onClose} className="text-white hover:bg-slate-700">Close</Button>
+            <Button variant="ghost" onClick={onClose} className="text-white hover:bg-navy-800">Close</Button>
             <Button variant="secondary" onClick={downloadJSON}><FileJson className="h-4 w-4" />JSON</Button>
             <Button variant="secondary" onClick={() => window.print()}><Printer className="h-4 w-4" />Print</Button>
             <Button onClick={downloadPDF} loading={isPdf}><Download className="h-4 w-4" />Download PDF</Button>
@@ -94,7 +94,7 @@ export default function ThreatReport({ record, onClose }) {
         <div ref={reportRef} className="flex-1 rounded-xl border border-slate-200 bg-white p-8 text-slate-900 shadow-xl">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-blue-800">AegisBorder AI · Threat Defense</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-navy-700">AegisBorder AI · Threat Defense</div>
               <h1 className="mt-1 text-xl font-extrabold">{opLabel}</h1>
               <p className="text-xs text-slate-500">Record {record.id || '—'} · scanned {fmtTs(record.ts)}</p>
             </div>

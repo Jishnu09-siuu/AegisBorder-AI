@@ -10,33 +10,35 @@ export function uniq(arr) {
 export function OperationShell({ icon, title, subtitle, inputs, onBack, children }) {
   const [muted, setMuted] = useState(isVoiceMuted());
   return (
-    <div className="space-y-4">
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All operations
-      </button>
+    <div className="workspace">
+      <div className="flex w-full flex-col gap-4">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-navy-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All operations
+        </button>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">{icon}</div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-bold text-slate-900">{title}</h2>
-            <p className="text-sm text-slate-500">{subtitle}</p>
+        <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-navy-100 bg-navy-50 text-navy-800">{icon}</div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-bold tracking-tight text-slate-900">{title}</h2>
+              <p className="text-sm text-slate-500">{subtitle}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { const next = !muted; setMuted(next); setVoiceMuted(next); }}
+              title={muted ? 'Voice alerts muted — click to enable' : (window.speechSynthesis ? 'Voice alerts on for HIGH / CRITICAL results' : 'Voice alerts unavailable in this browser')}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-navy-300 hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700"
+            >
+              {muted ? <VolumeX className="h-3.5 w-3.5" aria-hidden="true" /> : <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />}
+              {muted ? 'Voice alert off' : 'Voice alert on'}
+            </button>
+            {inputs && <Badge color="slate" className="hidden sm:inline-flex">{inputs}</Badge>}
           </div>
-          <button
-            type="button"
-            onClick={() => { const next = !muted; setMuted(next); setVoiceMuted(next); }}
-            title={muted ? 'Voice alerts muted — click to enable' : (window.speechSynthesis ? 'Voice alerts on for HIGH / CRITICAL results' : 'Voice alerts unavailable in this browser')}
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-          >
-            {muted ? <VolumeX className="h-3.5 w-3.5" aria-hidden="true" /> : <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />}
-            {muted ? 'Voice alert off' : 'Voice alert on'}
-          </button>
-          {inputs && <Badge color="slate" className="hidden sm:inline-flex">{inputs}</Badge>}
+          <div className="mt-4">{children}</div>
         </div>
-        <div className="mt-4">{children}</div>
       </div>
     </div>
   );
@@ -59,7 +61,7 @@ export function OperationResultCard({ display, onRunNew, onViewReport, savedId }
       <div className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-50', tone.iconCls)}>
+            <div className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-slate-50', tone.iconCls)}>
               <Icon className="h-6 w-6" aria-hidden="true" />
             </div>
             <div>
@@ -71,7 +73,7 @@ export function OperationResultCard({ display, onRunNew, onViewReport, savedId }
             </div>
           </div>
           {display.classification && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
               {display.classification}
             </div>
           )}
@@ -108,7 +110,7 @@ export function OperationResultCard({ display, onRunNew, onViewReport, savedId }
         )}
 
         {display.recommendation && (
-          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Recommended action</p>
             <p className="mt-1 text-sm font-medium text-slate-800">{display.recommendation}</p>
           </div>
@@ -138,14 +140,14 @@ export function OperationResultCard({ display, onRunNew, onViewReport, savedId }
   );
 }
 
-const INPUT_STYLES = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600';
+const INPUT_STYLES = 'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-navy-500 focus:outline-none focus:ring-2 focus:ring-navy-500/20';
 
 export function OperationInput({ as = 'input', label, hint, error, children, ...rest }) {
   const Tag = as;
   return (
     <div>
       <label className="mb-1 flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold text-slate-600">{label}</span>
+        <span className="text-xs font-semibold text-slate-700">{label}</span>
         {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
       </label>
       <Tag className={INPUT_STYLES} {...rest} />
