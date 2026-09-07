@@ -212,7 +212,7 @@ export default function Screening({ focus = 'document' }) {
     { name: t('chk_doc_valid'), state: docVal.is_valid ? 'pass' : 'fail', desc: docVal.is_valid ? t('chk_no_discrep') : (docVal.discrepancies || []).map((d) => d.description).join('; ') },
     { name: t('chk_forensics'), state: forensics.is_photo_tampered === false ? 'pass' : 'fail', desc: forensics.is_photo_tampered ? t('chk_tamper_detected') : t('chk_no_tamper') },
     { name: t('chk_metadata'), state: forensics.detected_software ? 'warn' : 'pass', desc: forensics.detected_software ? `${t('editing_software')}: ${forensics.detected_software.join(', ')}` : t('no_editing_traces') },
-    { name: t('chk_face'), state: !liveImage ? 'warn' : (bio.is_matched ? 'pass' : 'fail'), desc: !liveImage ? t('no_live_capture') : `${t('match')} ${bio.match_score}% · ${t('liveness')} ${bio.liveness?.is_live ? t('liveness_ok') : t('liveness_failed')}` },
+    { name: t('chk_face'), state: bio.biometric_available === false ? 'warn' : (bio.is_matched ? 'pass' : 'fail'), desc: bio.biometric_available === false ? t('no_live_capture') : (bio.is_matched ? `${t('match')} ${bio.match_score}% · ${t('liveness')} ${bio.liveness?.is_live ? t('liveness_ok') : t('liveness_failed')}` : `${t('match')} ${bio.match_score}% — ${bio.confidence || 'MISMATCH'}`) },
     { name: t('chk_watchlist'), state: watch.flagged ? 'fail' : 'pass', desc: watch.flagged ? (watch.alerts || []).map((a) => a.reason).join('; ') : t('no_watchlist_match') },
   ] : [];
 
@@ -448,16 +448,16 @@ export default function Screening({ focus = 'document' }) {
                 </div>
               </div>
 
-              {!liveImage && (
+              {bio.biometric_available === false && (
                 <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  <strong>Biometric verification NOT AVAILABLE.</strong> No live passenger capture was provided, so the engine performed a document-only screening. The match/liveness figures shown for document-only screenings are reference defaults, not the result of a live comparison, and are therefore suppressed below.
+                  <strong>Biometric verification NOT AVAILABLE.</strong> No live passenger capture was provided, so the engine performed a document-only screening. Face match and liveness results are suppressed.
                 </div>
               )}
 
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <div className="text-xs font-semibold text-slate-500">Match score</div>
-                  {liveImage ? (
+                  {bio.biometric_available !== false ? (
                     <div className="text-xl font-extrabold">{bio.match_score != null ? `${bio.match_score}%` : 'No comparison'}</div>
                   ) : (
                     <div className="text-xl font-extrabold text-slate-400">Not available</div>
@@ -465,7 +465,7 @@ export default function Screening({ focus = 'document' }) {
                 </div>
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <div className="text-xs font-semibold text-slate-500">Liveness</div>
-                  {liveImage ? (
+                  {bio.biometric_available !== false ? (
                     <div className="text-xl font-extrabold">{bio.liveness ? (bio.liveness.is_live ? 'Live' : 'Failed') : 'No capture'}</div>
                   ) : (
                     <div className="text-xl font-extrabold text-slate-400">Not available</div>
@@ -473,15 +473,15 @@ export default function Screening({ focus = 'document' }) {
                 </div>
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <div className="text-xs font-semibold text-slate-500">Confidence</div>
-                  {liveImage ? (
-                    <div className="text-xl font-extrabold">{bio.confidence != null ? `${bio.confidence}%` : '—'}</div>
+                  {bio.biometric_available !== false ? (
+                    <div className="text-xl font-extrabold">{bio.confidence != null ? bio.confidence : '—'}</div>
                   ) : (
                     <div className="text-xl font-extrabold text-slate-400">Not available</div>
                   )}
                 </div>
               </div>
 
-              {liveImage && bio.liveness && (
+              {bio.biometric_available !== false && bio.liveness && (
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <div className="mb-2 text-xs font-bold text-slate-600">Anti-spoofing & presentation attack defense</div>
                   <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">

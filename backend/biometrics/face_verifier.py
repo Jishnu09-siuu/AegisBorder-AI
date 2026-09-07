@@ -85,10 +85,12 @@ def detect_face(image_np: np.ndarray) -> Optional[Dict[str, Any]]:
             
     return detect_face_by_skin_and_geometry(image_np)
 
+FEATURE_DIM = 1280  # 8*8*16 hist bins + 16*16 sobel magnitudes
+
 def compute_face_feature_vector(face_crop: np.ndarray) -> np.ndarray:
     """Compute normalized multiscale spatial histogram & gradient feature descriptor"""
     if face_crop is None or face_crop.size == 0:
-        return np.zeros(128, dtype=np.float32)
+        return np.zeros(FEATURE_DIM, dtype=np.float32)
         
     resized = cv2.resize(face_crop, (128, 128))
     if len(resized.shape) == 3:
@@ -164,35 +166,34 @@ def verify_faces(doc_image_np: np.ndarray, live_image_np: np.ndarray) -> Dict[st
     """Module 4: Face Verification & Liveness Matching"""
     doc_face = detect_face(doc_image_np)
     live_face = detect_face(live_image_np)
-    
+
     if not doc_face or not live_face:
         return {
-            "match_score": 78.5 if (doc_face or live_face) else 0.0,
-            "is_matched": True if (doc_face or live_face) else False,
-            "confidence": "HIGH" if (doc_face and live_face) else "ESTIMATED",
+            "match_score": 0.0,
+            "is_matched": False,
+            "confidence": "UNAVAILABLE",
             "doc_face_detected": bool(doc_face),
             "live_face_detected": bool(live_face),
-            "liveness": check_liveness_and_anti_spoofing(live_image_np),
-            "similarity_percentage": 82.0
+            "liveness": {"liveness_score": 0.0, "is_live": False, "moire_artifact_detected": False, "sharpness_index": 0.0, "note": "Face detection failed — liveness check skipped"},
         }
-        
+
     vec1 = compute_face_feature_vector(doc_face["crop_rgb"])
     vec2 = compute_face_feature_vector(live_face["crop_rgb"])
-    
+
     dot_prod = float(np.dot(vec1, vec2))
     similarity = max(0.0, min(100.0, (dot_prod * 0.5 + 0.5) * 100.0))
-    adjusted_similarity = float(round(min(99.4, similarity * 1.08), 1))
-    is_matched = adjusted_similarity >= 65.0
-    
+    match_score = float(round(similarity, 1))
+    is_matched = match_score >= 65.0
+
     liveness_result = check_liveness_and_anti_spoofing(live_face["crop_rgb"])
-    
+
     return {
-        "match_score": adjusted_similarity,
+        "match_score": match_score,
         "is_matched": is_matched,
         "doc_face_bbox": doc_face["bbox"],
         "live_face_bbox": live_face["bbox"],
         "doc_face_detected": True,
         "live_face_detected": True,
         "liveness": liveness_result,
-        "confidence": "HIGH" if adjusted_similarity > 80 else ("MODERATE" if is_matched else "MISMATCH")
+        "confidence": "HIGH" if match_score > 80 else ("MODERATE" if is_matched else "MISMATCH")
     }

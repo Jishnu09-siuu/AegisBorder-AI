@@ -344,20 +344,25 @@ def screen_document(payload: ScreeningRequest):
             biometric_result = verify_faces(np_img, live_np)
         except Exception:
             biometric_result = {
-                "match_score": 88.0,
-                "is_matched": True,
-                "confidence": "HIGH",
-                "liveness": {"liveness_score": 96.0, "is_live": True}
+                "match_score": 0.0,
+                "is_matched": False,
+                "confidence": "ERROR",
+                "doc_face_detected": bool(face_detect),
+                "live_face_detected": False,
+                "liveness": {"liveness_score": 0.0, "is_live": False, "moire_artifact_detected": False, "sharpness_index": 0.0, "note": "Live image decode failed"},
+                "biometric_available": True,
+                "error": "Live image could not be decoded"
             }
     else:
-        # If no live feed provided, verify document portrait quality & liveness simulation
         biometric_result = {
-            "match_score": 94.2 if not (preset_data and preset_data.get("tamper_photo")) else 42.0,
-            "is_matched": True if not (preset_data and preset_data.get("tamper_photo")) else False,
-            "confidence": "HIGH" if not (preset_data and preset_data.get("tamper_photo")) else "MISMATCH",
+            "match_score": 0.0,
+            "is_matched": False,
+            "confidence": "UNAVAILABLE",
             "doc_face_detected": bool(face_detect),
             "doc_face_bbox": face_bbox,
-            "liveness": {"liveness_score": 95.0, "is_live": True, "moire_artifact_detected": False, "sharpness_index": 142.5}
+            "live_face_detected": False,
+            "liveness": {"liveness_score": 0.0, "is_live": False, "moire_artifact_detected": False, "sharpness_index": 0.0},
+            "biometric_available": False
         }
 
     # RISK ASSESSMENT ENGINE
