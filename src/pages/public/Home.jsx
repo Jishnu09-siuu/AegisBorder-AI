@@ -1,48 +1,29 @@
 import {
-  Fingerprint, FileSearch, ShieldAlert, AlertTriangle, Gauge, ArrowRight, ArrowDown, CheckCircle2,
-  FileCheck2, ScanLine, Crosshair, Landmark, BarChart3
+  ArrowRight, ArrowDown, CheckCircle2, Crosshair, Landmark, Gauge,
+  ScanLine
 } from 'lucide-react';
 import { accent } from '../../components/ui';
-
-const STRIP = [
-  { icon: Fingerprint, label: 'Identity', accent: 'identity' },
-  { icon: FileSearch, label: 'Documents', accent: 'document' },
-  { icon: AlertTriangle, label: 'Fraud', accent: 'fraud' },
-  { icon: ShieldAlert, label: 'Threats', accent: 'threat' },
-  { icon: Gauge, label: 'Risk', accent: 'risk' },
-];
-
-const FEATURES = [
-  { icon: Fingerprint, accent: 'identity', title: 'Identity Verification', text: 'Biometric capture, face comparison and liveness checks against the travel document.' },
-  { icon: FileCheck2, accent: 'document', title: 'Document Screening', text: 'MRZ validation, OCR extraction, tamper forensics and metadata analysis for travel documents.' },
-  { icon: ShieldAlert, accent: 'threat', title: 'Threat Detection', text: 'On-device engines flag scams, phishing, payment fraud, and malware — no data leaves the device.' },
-  { icon: AlertTriangle, accent: 'fraud', title: 'Fraud Detection', text: 'Cross-field inconsistencies, manipulation indicators and anomaly review for forged documents.' },
-  { icon: Gauge, accent: 'risk', title: 'Risk Assessment', text: 'A composite risk score across identity, document, fraud and threat dimensions with a clear recommendation.' },
-  { icon: BarChart3, accent: 'analytics', title: 'Analytics & Reporting', text: 'Screening activity, risk distribution, audit certificates and exportable session reports.' },
-];
+import { VERIFICATIONS } from './verifications';
 
 const PROCESS = [
-  { n: '01', title: 'Submit', text: 'Upload a document scan or paste the MRZ string.' },
-  { n: '02', title: 'Verify', text: 'Identity verification against the document portrait.' },
-  { n: '03', title: 'Screen', text: 'Module-by-module document and fraud screening.' },
-  { n: '04', title: 'Assess', text: 'Composite risk scoring with a recommended decision.' },
-  { n: '05', title: 'Review', text: 'Structured officer review and audit trail.' },
+  { n: '01', title: 'Submit', text: 'Upload a document scan, paste text, or share a link.' },
+  { n: '02', title: 'Verify', text: 'Document and identity verification against the portrait.' },
+  { n: '03', title: 'Analyze', text: 'Threat detection and AI pattern analysis on the input.' },
+  { n: '04', title: 'Decide', text: 'A clear, recommended decision for the officer.' },
+  { n: '05', title: 'Review', text: 'Structured review and a complete audit trail.' },
 ];
 
 const PILLARS = [
-  { title: 'Multi-Layer Screening', text: 'Unified screening across identity, documents, fraud and threats — not a single signal.' },
-  { title: 'Risk-Based Analysis', text: 'Prioritise cases that require attention with tiered risk labels.' },
+  { title: 'Multi-Layer Verification', text: 'Unified screening across documents, identity, threats and AI pattern analysis — not a single signal.' },
+  { title: 'Evidence-Based Decisions', text: 'Prioritise cases that require attention with tiered risk labels.' },
   { title: 'Operational Visibility', text: 'Clear screening results, case history and activity trends in one console.' },
   { title: 'Auditable Workflow', text: 'Structured review with a signed audit certificate for every completed case.' },
 ];
 
 const PIPELINE = [
-  'Document',
-  'Identity Verification',
-  'Document Analysis',
-  'Fraud Detection',
+  'Document & Identity Verification',
   'Threat Detection',
-  'Risk Assessment',
+  'AI Analysis',
   'Screening Decision',
 ];
 
@@ -58,11 +39,11 @@ export default function Home({ onNavigate }) {
               <ScanLine className="h-3.5 w-3.5" aria-hidden="true" /> Smart border screening platform
             </p>
             <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-navy-900 sm:text-5xl">
-              Secure Border Screening.<br />Intelligent Identity Verification.
+              Secure Border Screening.<br />Intelligent Verification.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600">
-              AegisBorder AI brings document screening, identity verification, fraud detection,
-              threat assessment and risk analysis into one unified screening platform.
+              AegisBorder AI brings document and identity verification, threat detection and AI
+              pattern analysis into one unified screening platform.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button onClick={enter}
@@ -110,15 +91,15 @@ export default function Home({ onNavigate }) {
       </section>
 
       {/* TRUST / CAPABILITY STRIP */}
-      <section className="border-b border-slate-200 bg-white" aria-label="Capabilities">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-6 px-4 py-10 sm:grid-cols-3 md:grid-cols-5 lg:px-6">
-          {STRIP.map(({ icon: Icon, label, accent: a }) => {
+      <section className="border-b border-slate-200 bg-white" aria-label="Verification areas">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-x-6 gap-y-6 px-4 py-10 sm:grid-cols-3 lg:px-6">
+          {VERIFICATIONS.map(({ kind, icon: Icon, label, accent: a }) => {
             const ac = accent(a);
             return (
-              <div key={label} className="flex items-center gap-2.5">
+              <button key={kind} onClick={() => onNavigate(kind)} className="flex items-center gap-2.5 text-left">
                 <span className={cxBox(ac)}><Icon className="h-4 w-4" aria-hidden="true" /></span>
                 <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700">{label}</span>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -128,46 +109,27 @@ export default function Home({ onNavigate }) {
       <section className="mx-auto max-w-6xl px-4 py-16 lg:px-6">
         <div className="max-w-2xl">
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-navy-600">What AegisBorder AI does</p>
-          <h2 className="text-2xl font-extrabold tracking-tight text-navy-900 sm:text-[26px]">One Platform. Multiple Layers of Screening.</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight text-navy-900 sm:text-[26px]">One Platform. Three Verification Areas.</h2>
         </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {FEATURES.slice(0, 5).map(({ icon: Icon, accent: a, title, text }) => {
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {VERIFICATIONS.map(({ kind, icon: Icon, accent: a, title, blurb, body }) => {
             const ac = accent(a);
             return (
-              <div key={title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                <span className={cxBox(ac)}><Icon className="h-5 w-5" aria-hidden="true" /></span>
-                <h3 className="mt-3 text-sm font-extrabold text-navy-900">{title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{text}</p>
-              </div>
+              <button key={kind} onClick={() => onNavigate(kind)}
+                className="group flex flex-col rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className={cxBox(ac)}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                  <span className="h-1.5 w-10 rounded-full" style={{ background: ac.bar }} aria-hidden="true" />
+                </div>
+                <h3 className="mt-4 text-base font-extrabold text-navy-900">{title}</h3>
+                <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-500">{blurb}</p>
+                <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-slate-400">{body}</p>
+                <span className="mt-3 flex items-center gap-1 text-xs font-bold text-navy-700 group-hover:underline">
+                  Open {title} <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                </span>
+              </button>
             );
           })}
-        </div>
-      </section>
-
-      {/* FEATURES PREVIEW */}
-      <section className="border-y border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-6xl px-4 py-16 lg:px-6">
-          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-navy-600">Screening capabilities</p>
-          <h2 className="text-2xl font-extrabold tracking-tight text-navy-900 sm:text-[26px]">Six layers. One workflow.</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, accent: a, title, text }) => {
-              const ac = accent(a);
-              return (
-                <div key={title} className="group flex flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className={cxBox(ac)}><Icon className="h-5 w-5" aria-hidden="true" /></span>
-                    <span className="h-1.5 w-10 rounded-full" style={{ background: ac.bar }} aria-hidden="true" />
-                  </div>
-                  <h3 className="mt-4 text-base font-extrabold text-navy-900">{title}</h3>
-                  <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-500">{text}</p>
-                  <button onClick={() => onNavigate('features')}
-                    className="mt-4 flex items-center gap-1 text-xs font-bold text-navy-700 hover:underline">
-                    Learn More <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
         </div>
       </section>
 

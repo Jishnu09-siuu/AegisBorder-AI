@@ -15,6 +15,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 import Home from './pages/public/Home';
 import Features from './pages/public/Features';
+import VerificationLanding from './pages/public/VerificationLanding';
+import { VERIFICATIONS } from './pages/public/verifications';
 import About from './pages/public/About';
 import Contact from './pages/public/Contact';
 import UserProfile from './pages/UserProfile';
@@ -476,6 +478,7 @@ export default function App() {
         {route === 'features' && <Features onNavigate={navigate} />}
         {route === 'about' && <About onNavigate={navigate} />}
         {route === 'contact' && <Contact />}
+        {VERIFICATIONS.map((v) => route === v.kind && <VerificationLanding key={v.kind} kind={v.kind} onNavigate={navigate} />)}
         {route === 'profile' && (
           <ErrorBoundary key={profileTab || 'default'}>
             <UserProfile onNavigate={navigate} officer={officer} health={health} lang={lang} setLang={setLang} tab={profileTab} />

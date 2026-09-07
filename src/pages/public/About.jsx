@@ -1,21 +1,13 @@
-import {
-  Fingerprint, FileCheck2, ShieldAlert, AlertTriangle, Gauge, BarChart3, Compass, Layers, Eye, Info
-} from 'lucide-react';
+import { Compass, Layers, Eye, Info } from 'lucide-react';
 import { accent } from '../../components/ui';
 import { PageHeading, SectionTitle } from '../../components/PublicSite';
+import { VERIFICATIONS } from './verifications';
 
-const ECOSYSTEM = [
-  { icon: Fingerprint, accent: 'identity', label: 'Identity' },
-  { icon: FileCheck2, accent: 'document', label: 'Documents' },
-  { icon: AlertTriangle, accent: 'fraud', label: 'Fraud' },
-  { icon: ShieldAlert, accent: 'threat', label: 'Threat' },
-  { icon: Gauge, accent: 'risk', label: 'Risk' },
-  { icon: BarChart3, accent: 'analytics', label: 'Analytics' },
-];
+const ECOSYSTEM = VERIFICATIONS.map(({ icon, accent: a, label }) => ({ icon, accent: a, label }));
 
 const WORKFLOW = [
   { step: 'Capture', detail: 'Document scan, MRZ string or live identity capture.' },
-  { step: 'Screen', detail: 'Modules run MRZ, forensics, fraud and threat checks.' },
+  { step: 'Screen', detail: 'Modules run MRZ, forensics, biometric and threat checks.' },
   { step: 'Assess', detail: 'Signals combine into a composite risk score and tier.' },
   { step: 'Decide', detail: 'Officer reviews and records the final decision.' },
   { step: 'Audit', detail: 'A signed certificate documents the outcome.' },
@@ -41,9 +33,9 @@ export default function About({ onNavigate }) {
               screen.
             </p>
             <p>
-              AegisBorder AI consolidates document screening, identity verification, fraud
-              detection, threat assessment and risk analysis into one screening workflow — so an
-              officer sees a clear, structured result instead of a pile of separate tools.
+              AegisBorder AI consolidates document and identity verification, threat detection
+              and AI pattern analysis into one screening workflow — so an officer sees a clear,
+              structured result instead of a pile of separate tools.
             </p>
           </div>
         </section>
@@ -80,7 +72,7 @@ export default function About({ onNavigate }) {
 
         <section>
           <SectionTitle eyebrow="Screening ecosystem" title="The layers of the platform" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {ECOSYSTEM.map(({ icon: Icon, accent: a, label }) => {
               const ac = accent(a);
               return (
