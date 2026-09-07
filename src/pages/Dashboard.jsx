@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ScanLine, FileText, ScanFace, ClipboardList, ShieldAlert, BellRing, AlertTriangle,
   ArrowRight, Radio, ShieldCheck, CheckCircle2, Flag
@@ -7,7 +7,7 @@ import {
   Badge, Button, Card, EmptyState, StatusDot, PageHeader, MetricCard, DonutChart,
   MiniBarChart, SeverityScale
 } from '../components/ui';
-import { getHistory, formatTime, kpisFromHistory, tierMeta, analyticsFromHistory, OPERATION_LABELS } from '../lib/store';
+import { getHistory, formatTime, kpisFromHistory, tierMeta, analyticsFromHistory, OPERATION_LABELS, useStore } from '../lib/store';
 import { apiHealth } from '../lib/api';
 import { useT } from '../i18n';
 
@@ -29,21 +29,21 @@ function ScreeningType({ r }) {
   return 'Document & Identity Screening';
 }
 
-function ReviewStatus({ r }) {
-  if (r.watchlistFlagged) return <Badge color="red"><Flag className="h-3 w-3" /> Watchlist</Badge>;
+function ReviewStatus({ r, t }) {
+  if (r.watchlistFlagged) return <Badge color="red"><Flag className="h-3 w-3" /> {t('watchlist')}</Badge>;
   const meta = tierMeta(r.riskTier);
-  const label = meta.order === 0 ? 'Verified & cleared' : meta.order === 1 ? 'Review required' : 'Investigation';
+  const label = meta.order === 0 ? t('verified') : meta.order === 1 ? t('review_required') : t('investigation');
   return <Badge color={meta.color}>{label}</Badge>;
 }
 
 export default function Dashboard({ onNavigate, demoMode }) {
   const { t } = useT();
-  const history = useMemo(() => getHistory(), []);
+  const history = useStore(getHistory);
   const kpis = kpisFromHistory();
-  const data = useMemo(() => analyticsFromHistory(), []);
+  const data = analyticsFromHistory();
   const [health, setHealth] = useState('checking');
 
-  useMemo(() => {
+  useEffect(() => {
     apiHealth()
       .then(() => setHealth('online'))
       .catch(() => setHealth('offline'));
@@ -84,8 +84,8 @@ export default function Dashboard({ onNavigate, demoMode }) {
           icon={ShieldCheck}
           actions={
             <>
-              <Button variant="secondary" onClick={() => onNavigate('reports')}>
-                <FileText className="h-4 w-4" /> {t('nav_reports')}
+              <Button variant="secondary" onClick={() => onNavigate('history')}>
+                <FileText className="h-4 w-4" /> {t('screening_history')}
               </Button>
               <Button onClick={() => onNavigate('screening')}>
                 <ScanLine className="h-4 w-4" /> {t('start_screening')}
@@ -201,7 +201,7 @@ export default function Dashboard({ onNavigate, demoMode }) {
                               <Badge color={meta.color}>{t('tier_' + r.riskTier)}</Badge>
                               <span className="ml-1.5 text-xs font-semibold tabular-nums text-slate-400">{r.riskScore}%</span>
                             </td>
-                            <td><ReviewStatus r={r} /></td>
+                            <td><ReviewStatus r={r} t={t} /></td>
                             <td className="text-xs tabular-nums text-slate-500">{formatTime(r.ts)}</td>
                             <td className="text-xs text-slate-500">{r.officerStatus ? (r.officerStatus === 'approved' ? t('verified') : r.officerStatus) : '—'}</td>
                             <td className="text-right">

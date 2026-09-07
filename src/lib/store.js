@@ -1,6 +1,25 @@
+import { useSyncExternalStore } from 'react';
+
 const HISTORY_KEY = 'rakshak_history_v1';
 const ALERTS_KEY = 'rakshak_alerts_v1';
 const MAX_RECORDS = 60;
+
+/* ----------------------------------------------------------
+   Lightweight reactive store. Pages subscribe instead of
+   snapshotting localStorage once at mount (fixes stale reads).
+   ---------------------------------------------------------- */
+const listeners = new Set();
+
+export function subscribe(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function emit() {
+  for (const fn of listeners) {
+    try { fn(); } catch { /* ignore listener errors */ }
+  }
+}
 
 export const TIER_META = {
   LOW:      { label: 'VERIFIED',        short: 'Low',    color: 'green',  order: 0 },
@@ -135,18 +154,34 @@ export function addThreatToHistory(opType, result, meta = {}) {
   return record;
 }
 
+/* ----------------------------------------------------------
+   Parsed-value cache (keyed on raw stored string) so that
+   useSyncExternalStore snapshots keep a stable reference between
+   renders — otherwise every getSnapshot returns a fresh array
+   and React loops forever.
+   ---------------------------------------------------------- */
+const readCache = {};
+
 function read(key) {
+  let raw;
   try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
+    raw = localStorage.getItem(key);
   } catch {
-    return [];
+    raw = null;
   }
+  if (readCache[key] !== undefined && readCache[key].raw === raw) return readCache[key].value;
+  let parsed = [];
+  if (raw) {
+    try { parsed = JSON.parse(raw); } catch { parsed = []; }
+  }
+  readCache[key] = { raw, value: parsed };
+  return parsed;
 }
 
 function write(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    emit();
   } catch (e) {
     if (key === HISTORY_KEY && e?.name === 'QuotaExceededError') {
       const stripped = value.map((r) => {
@@ -159,6 +194,7 @@ function write(key, value) {
       });
       try {
         localStorage.setItem(key, JSON.stringify(stripped));
+        emit();
       } catch {
         localStorage.removeItem(key);
       }
@@ -188,6 +224,7 @@ export function updateRecordStatus(id, status) {
 
 export function deleteRecord(id) {
   write(HISTORY_KEY, getHistory().filter((r) => r.id !== id));
+  write(ALERTS_KEY, getAlerts().filter((a) => a.id !== id));
 }
 
 export function clearHistory() {
@@ -282,4 +319,13 @@ export function analyticsFromHistory() {
     byCategory,
     failures: { faceFail, tamperFail, validFail, watchlistFail },
   };
+}
+
+/* ----------------------------------------------------------
+   React hook: re-render the caller when history/alerts change.
+   Usage: const history = useStore(getHistory);  (getHistory is
+   passed as a selector so reads always pull fresh localStorage.)
+   ---------------------------------------------------------- */
+export function useStore(selector) {
+  return useSyncExternalStore(subscribe, selector, selector);
 }

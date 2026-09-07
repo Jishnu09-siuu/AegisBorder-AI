@@ -4,9 +4,9 @@ import {
   ShieldCheck, ScanLine, Flag, KeyRound, UserCheck, FileCheck2
 } from 'lucide-react';
 import {
-  Badge, Button, EmptyState, cx, IconButton, PageHeader, Pagination, downloadCSV, tierSeverityColor
+  Badge, Button, EmptyState, cx, IconButton, Modal, PageHeader, Pagination, downloadCSV, tierSeverityColor
 } from '../components/ui';
-import { getHistory, deleteRecord, formatTime, secondsAgo, tierMeta, OPERATION_LABELS } from '../lib/store';
+import { getHistory, deleteRecord, formatTime, secondsAgo, tierMeta, OPERATION_LABELS, useStore } from '../lib/store';
 import AuditReport from '../components/AuditReport';
 import ThreatReport from '../components/operations/ThreatReport';
 import { useT } from '../i18n';
@@ -49,10 +49,11 @@ export default function History() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [sort, setSort] = useState({ key: 'ts', dir: 'desc' });
   const [page, setPage] = useState(0);
 
-  const all = useMemo(() => getHistory(), []);
+  const all = useStore(getHistory);
 
   const filtered = useMemo(() => {
     return all.filter((r) => {
@@ -173,7 +174,7 @@ export default function History() {
                               <Button variant="secondary" className="!px-2 !py-1 text-xs" onClick={() => setSelected(r)}>
                                 <FileText className="h-3.5 w-3.5" /> {t('view')}
                               </Button>
-                              <IconButton label={t('delete_record')} onClick={() => { deleteRecord(r.id); if (selected?.id === r.id) setSelected(null); }}>
+                              <IconButton label={t('delete_record')} onClick={() => setConfirmDelete(r)}>
                                 <Trash2 className="h-4 w-4" />
                               </IconButton>
                             </div>
@@ -189,7 +190,6 @@ export default function History() {
 
             <div className="space-y-2 lg:hidden">
               {view.map((r) => {
-                const meta = tierMeta(r.riskTier);
                 return (
                   <div key={r.id} className="rounded-md border border-slate-200 bg-white p-4">
                     <div className="flex items-center justify-between">
@@ -206,7 +206,7 @@ export default function History() {
                       <div className="text-xs text-slate-500">{r.decision} · <span className="font-bold">{r.riskScore}%</span></div>
                       <div className="flex items-center gap-1">
                         <Button variant="secondary" className="!px-3 !py-1 text-xs" onClick={() => setSelected(r)}>{t('view_report')}</Button>
-                        <IconButton label={t('delete_record')} onClick={() => deleteRecord(r.id)}>
+                        <IconButton label={t('delete_record')} onClick={() => setConfirmDelete(r)}>
                           <Trash2 className="h-4 w-4" />
                         </IconButton>
                       </div>
@@ -225,9 +225,29 @@ export default function History() {
           record={selected}
           t={t}
           onClose={() => setSelected(null)}
-          onDelete={() => { deleteRecord(selected.id); setSelected(null); }}
+          onConfirmDelete={() => setConfirmDelete(selected)}
         />
       )}
+
+      <Modal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title={t('delete_record')}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmDelete(null)}>{t('cancel')}</Button>
+            <Button variant="danger" onClick={() => {
+              deleteRecord(confirmDelete.id);
+              if (selected?.id === confirmDelete.id) setSelected(null);
+              setConfirmDelete(null);
+            }}><Trash2 className="h-4 w-4" /> {t('delete')}</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600">
+          {t('delete_confirm', { id: confirmDelete?.id })}
+        </p>
+      </Modal>
     </div>
   );
 }
@@ -235,7 +255,7 @@ export default function History() {
 /* ------------------------------------------------------------
    Case investigation view — structured scan + activity timeline
    ------------------------------------------------------------ */
-function CaseDetail({ record: r, t, onClose, onDelete }) {
+function CaseDetail({ record: r, t, onClose, onConfirmDelete }) {
   const [showFull, setShowFull] = useState(false);
 
   const timeline = useMemo(() => {
@@ -291,7 +311,7 @@ function CaseDetail({ record: r, t, onClose, onDelete }) {
             <Button variant="secondary" className="!px-3 !py-1.5 text-xs" onClick={() => setShowFull(true)}>
               <FileText className="h-3.5 w-3.5" /> {t('open_full_report')}
             </Button>
-            <Button variant="danger" className="!px-3 !py-1.5 text-xs" onClick={onDelete}>
+            <Button variant="danger" className="!px-3 !py-1.5 text-xs" onClick={onConfirmDelete}>
               <Trash2 className="h-3.5 w-3.5" /> {t('delete_record')}
             </Button>
             <Button variant="ghost" onClick={onClose} className="text-white hover:bg-navy-800">{t('close')}</Button>
@@ -300,7 +320,7 @@ function CaseDetail({ record: r, t, onClose, onDelete }) {
 
         <div className="rounded-md border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
           <div className="grid grid-cols-2 gap-4 border-b border-slate-200 pb-4 md:grid-cols-4">
-            <Meta k={t('status')} v={<ReviewStatusLabel r={r} />} />
+            <Meta k={t('status')} v={<ReviewStatusLabel r={r} t={t} />} />
             <Meta k={t('risk_level')} v={<><span className="font-bold">{r.riskScore}%</span> {t('tier_' + r.riskTier)}</>} />
             <Meta k={t('tl_created')} v={formatTime(r.ts)} />
             <Meta k={t('tl_last_update')} v={r.officerStatus || formatTime(r.ts)} />
@@ -383,10 +403,10 @@ function CaseDetail({ record: r, t, onClose, onDelete }) {
   );
 }
 
-function ReviewStatusLabel({ r }) {
-  if (r.watchlistFlagged) return <Badge color="red"><Flag className="h-3 w-3" /> Watchlist</Badge>;
+function ReviewStatusLabel({ r, t }) {
+  if (r.watchlistFlagged) return <Badge color="red"><Flag className="h-3 w-3" /> {t('watchlist')}</Badge>;
   const meta = tierMeta(r.riskTier);
-  const label = meta.order === 0 ? 'Verified & cleared' : meta.order === 1 ? 'Review required' : 'Investigation';
+  const label = meta.order === 0 ? t('verified') : meta.order === 1 ? t('review_required') : t('investigation');
   return <Badge color={meta.color}>{label}</Badge>;
 }
 

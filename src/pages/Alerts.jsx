@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BellRing, ShieldAlert, ShieldCheck, CheckCircle2, Shield, AlertTriangle } from 'lucide-react';
 import { Badge, Button, EmptyState, cx, PageHeader } from '../components/ui';
-import { resolveAlert, syncAlertsFromHistory } from '../lib/store';
+import { getAlerts, getHistory, resolveAlert, syncAlertsFromHistory, useStore } from '../lib/store';
 import { useT } from '../i18n';
 
 const SEVERITY_COLOR = { Critical: 'red', High: 'orange', Moderate: 'amber', Low: 'slate' };
@@ -9,8 +9,11 @@ const SEVERITY_ICON = { Critical: ShieldAlert, High: ShieldAlert, Moderate: Aler
 
 export default function Alerts() {
   const { t } = useT();
-  const [alerts, setAlerts] = useState(() => syncAlertsFromHistory());
+  const history = useStore(getHistory);
   const [filter, setFilter] = useState('open');
+
+  useEffect(() => { syncAlertsFromHistory(); }, [history]);
+  const alerts = useStore(getAlerts);
 
   const rows = useMemo(() => {
     return alerts.filter((a) => (filter === 'open' ? !a.resolution : filter === 'resolved' ? !!a.resolution : true));
@@ -82,10 +85,10 @@ export default function Alerts() {
                         </span>
                         {!resolved ? (
                           <div className="flex gap-2">
-                            <Button variant="secondary" className="!px-3 !py-1 text-xs" onClick={() => setAlerts(resolveAlert(a.id, 'watching'))}>
+                            <Button variant="secondary" className="!px-3 !py-1 text-xs" onClick={() => resolveAlert(a.id, 'watching')}>
                               {t('mark_watching')}
                             </Button>
-                            <Button variant="success" className="!px-3 !py-1 text-xs" onClick={() => setAlerts(resolveAlert(a.id, 'handled'))}>
+                            <Button variant="success" className="!px-3 !py-1 text-xs" onClick={() => resolveAlert(a.id, 'handled')}>
                               <Shield className="h-3.5 w-3.5" /> {t('mark_handled')}
                             </Button>
                           </div>

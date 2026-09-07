@@ -86,8 +86,8 @@ export default function NewPassengerModal({ isOpen, onClose, onPassengerCreated 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Register new passenger">
-      <button className="fixed inset-0 bg-navy-950/60" aria-label="Close" onClick={onClose} />
-      <div className="relative mx-auto my-6 w-full max-w-4xl rounded-xl bg-white shadow-2xl border border-slate-200">
+      <div className="fixed inset-0 bg-navy-950/60" aria-hidden="true" onClick={onClose} />
+      <div className="relative z-10 mx-auto my-6 w-full max-w-4xl rounded-xl bg-white shadow-2xl border border-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-navy-50 text-navy-800">

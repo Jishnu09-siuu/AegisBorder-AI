@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Suspense, lazy } from 'react';
 import {
-  LayoutDashboard, ScanLine, History as HistoryIcon, BellRing, BarChart3, FileText,
-  Settings as SettingsIcon, Shield, Menu, X, MoreHorizontal, Wifi, AlertTriangle, Plus, Globe, LifeBuoy, User, Home as HomeIcon
+  LayoutDashboard, ScanLine, History as HistoryIcon, BellRing, BarChart3,
+  Settings as SettingsIcon, Shield, Menu, X, MoreHorizontal, AlertTriangle, Plus, Globe, LifeBuoy, User, Home as HomeIcon
 } from 'lucide-react';
 import { apiHealth } from './lib/api';
-import { getAlerts, getHistory, tierMeta } from './lib/store';
+import { getAlerts, getHistory, tierMeta, useStore } from './lib/store';
 import { cx, accent } from './components/ui';
 import { SeverityBadge } from './components/Detection';
 import { toast, ToastHost } from './components/Toast';
@@ -22,7 +22,6 @@ import Dashboard from './pages/Dashboard';
 import NewOperation from './pages/NewOperation';
 import History from './pages/History';
 import Alerts from './pages/Alerts';
-import Reports from './pages/Reports';
 import SettingsPage from './pages/Settings';
 const Analytics = lazy(() => import('./pages/Analytics'));
 
@@ -32,7 +31,6 @@ const PRIMARY_NAV = [
   { id: 'history', label: 'nav_history', icon: HistoryIcon, accent: 'identity' },
   { id: 'alerts', label: 'nav_alerts', icon: BellRing, accent: 'threat' },
   { id: 'analytics', label: 'nav_analytics', icon: BarChart3, accent: 'analytics' },
-  { id: 'reports', label: 'nav_reports', icon: FileText, accent: 'analytics' },
   { id: 'settings', label: 'nav_settings', icon: SettingsIcon, accent: 'system' },
 ];
 
@@ -224,6 +222,8 @@ export default function App() {
   const [demoMode, setDemoMode] = useState(() => localStorage.getItem('rakshak_demo') === '1');
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const health = useHealth();
+  const history = useStore(getHistory);
+  const alerts = useStore(getAlerts);
 
   const officer = useMemo(() => {
     try {
@@ -233,9 +233,9 @@ export default function App() {
     }
   }, []);
 
-  const alertCount = useMemo(() => getAlerts().filter((a) => !a.resolution).length, [route]);
+  const alertCount = useMemo(() => getAlerts().filter((a) => !a.resolution).length, [alerts]);
 
-  const recentAlerts = useMemo(() => getAlerts().filter((a) => !a.resolution).sort((x, y) => new Date(y.ts) - new Date(x.ts)).slice(0, 5), [route]);
+  const recentAlerts = useMemo(() => getAlerts().filter((a) => !a.resolution).sort((x, y) => new Date(y.ts) - new Date(x.ts)).slice(0, 5), [alerts]);
 
   const scanStats = useMemo(() => {
     const today = new Date().toDateString();
@@ -246,14 +246,14 @@ export default function App() {
       clearedToday: todayScans.filter((r) => tierMeta(r.riskTier).order === 0).length,
       flaggedToday: todayScans.filter((r) => tierMeta(r.riskTier).order >= 2 || r.watchlistFlagged).length,
     };
-  }, [route]);
+  }, [history]);
 
   const critical = useMemo(() => {
     const latest = getHistory()[0];
     if (!latest || bannerDismissed) return null;
     if (latest.watchlistFlagged || latest.riskTier === 'CRITICAL') return latest;
     return null;
-  }, [route, bannerDismissed]);
+  }, [history, bannerDismissed]);
 
   const navigate = (id) => {
     setRoute(id);
@@ -268,8 +268,8 @@ export default function App() {
 
   const MobileMoreSheet = moreSheet && (
     <div className="fixed inset-0 z-50 flex items-end lg:hidden" role="dialog" aria-modal="true" aria-label="More options">
-      <button className="absolute inset-0 bg-navy-950/60" aria-label="Close" onClick={() => setMoreSheet(false)} />
-      <div className="relative w-full rounded-t-xl bg-white p-4 pb-8 shadow-2xl">
+      <div className="absolute inset-0 bg-navy-950/60" aria-hidden="true" onClick={() => setMoreSheet(false)} />
+      <div className="relative z-10 w-full rounded-t-xl bg-white p-4 pb-8 shadow-2xl">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-900">{t('more')}</h2>
           <button onClick={() => setMoreSheet(false)} aria-label="Close" className="rounded-md p-2 text-slate-500 hover:bg-slate-100"><X className="h-5 w-5" /></button>
@@ -282,7 +282,6 @@ export default function App() {
             { id: 'history', label: t('nav_history'), icon: HistoryIcon },
             { id: 'alerts', label: t('nav_alerts'), icon: BellRing },
             { id: 'analytics', label: t('nav_analytics'), icon: BarChart3 },
-            { id: 'reports', label: t('nav_reports'), icon: FileText },
             { id: 'settings', label: t('nav_settings'), icon: SettingsIcon },
           ].map(({ id, label, icon: Icon, primary }) => (
             <button key={id} onClick={() => navigate(id)} className={cx('flex items-center gap-3 rounded-md border px-4 py-3 text-sm font-semibold', primary ? 'border-navy-800 bg-navy-800 text-white' : 'border-slate-200 bg-slate-50 text-slate-800 hover:bg-blue-50')}>
@@ -470,7 +469,7 @@ export default function App() {
           <div className="mt-1 text-[10px] text-slate-400">{officer.checkpoint}</div>
         </div>
       </div>
-      {sidebarOpen && <button className="fixed inset-0 z-30 bg-navy-950/50 xl:hidden" aria-label="Close menu" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 z-30 bg-navy-950/50 xl:hidden" aria-hidden="true" onClick={() => setSidebarOpen(false)} />}
 
       <main className="flex-1 pb-10">
         {route === 'home' && <Home onNavigate={navigate} />}
@@ -486,7 +485,6 @@ export default function App() {
         {route === 'screening' && <NewOperation healthState={health} onRefresh={health.refresh} />}
         {route === 'history' && <History />}
         {route === 'alerts' && <Alerts />}
-        {route === 'reports' && <Reports />}
         {route === 'settings' && <SettingsPage demoMode={demoMode} setDemoMode={setDemoMode} health={health} />}
         {route === 'analytics' && (
           <Suspense fallback={<div className="py-20 text-center text-sm text-slate-500">{t('loading_analytics')}</div>}>

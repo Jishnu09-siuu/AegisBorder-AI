@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { BarChart3, CheckCircle2, AlertTriangle, ShieldAlert, FileText, Clock, ScanLine } from 'lucide-react';
 import { Card, EmptyState, cx, PageHeader } from '../components/ui';
-import { analyticsFromHistory, tierMeta } from '../lib/store';
+import { getHistory, analyticsFromHistory, tierMeta, useStore } from '../lib/store';
 import { useT } from '../i18n';
 
 function useOpLabels(t) {
@@ -41,7 +41,8 @@ function PanelHeader({ icon: Icon, children, accent }) {
 export default function Analytics() {
   const { t } = useT();
   const OP_LABELS = useOpLabels(t);
-  const data = useMemo(() => analyticsFromHistory(), []);
+  const history = useStore(getHistory);
+  const data = useMemo(() => analyticsFromHistory(), [history]);
   const maxTier = Math.max(1, ...Object.values(data.byTier));
   const maxHour = Math.max(1, ...Object.values(data.byHour));
 
