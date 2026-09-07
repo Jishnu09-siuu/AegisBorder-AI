@@ -10,6 +10,7 @@ import { addToHistory, updateRecordStatus, tierMeta } from '../lib/store';
 import { toast } from '../components/Toast';
 import NewPassengerModal from '../components/NewPassengerModal';
 import CameraCapture from '../components/CameraCapture';
+import BiometricVerification from '../components/BiometricVerification';
 import AuditReport from '../components/AuditReport';
 import { speakAlert } from '../lib/voiceAlert';
 import { useT } from '../i18n';
@@ -59,6 +60,7 @@ export default function Screening({ focus = 'document' }) {
   const [showRegister, setShowRegister] = useState(false);
   const [showMrz, setShowMrz] = useState(false);
   const [docCamOn, setDocCamOn] = useState(false);
+  const [guidedBio, setGuidedBio] = useState(null);
   const fileRef = useRef(null);
   const liveFileRef = useRef(null);
   const confettiFiredRef = useRef(false);
@@ -102,6 +104,7 @@ export default function Screening({ focus = 'document' }) {
         setDocumentImage(null);
         setLiveImage(null);
         setMrzText('');
+        setGuidedBio(null);
       }
       refreshPresets();
       toast(`${holderName} ${t('removed_from_passengers')}`, { type: 'info', title: t('passenger_deleted') });
@@ -123,6 +126,7 @@ export default function Screening({ focus = 'document' }) {
       setUploadName(null);
       setResult(null);
       setRecordId(null);
+      setGuidedBio(null);
       setStep(0);
     } catch (e) {
       setError(e.message || t('failed_to_load_scenario'));
@@ -143,13 +147,17 @@ export default function Screening({ focus = 'document' }) {
     try {
       const payload = { document_image_b64: doc, live_passenger_b64: face, mrz_text_raw: mrzText };
       const data = await apiScreenDocument(payload);
-      const rc = addToHistory(data, { source: activePreset ? 'scenario' : 'live', scenario: activePreset?.title || uploadName || null });
-      setResult(data);
+      // The guided active-liveness verification is the strongest biometric
+      // evidence; when present, its result overrides the screening engine's
+      // passive-only comparison.
+      const merged = guidedBio ? { ...data, biometrics: { ...data.biometrics, ...guidedBio } } : data;
+      const rc = addToHistory(merged, { source: activePreset ? 'scenario' : 'live', scenario: activePreset?.title || uploadName || null });
+      setResult(merged);
       setRecordId(rc.id);
       applyFocus();
-      const tier = data.risk_assessment?.risk_tier || 'LOW';
+      const tier = merged.risk_assessment?.risk_tier || 'LOW';
       toast(
-        tier === 'LOW' ? t('screen_cleared') : t('screen_review', { score: data.risk_assessment?.overall_risk_score, tier }),
+        tier === 'LOW' ? t('screen_cleared') : t('screen_review', { score: merged.risk_assessment?.overall_risk_score, tier }),
         { type: tier === 'LOW' ? 'success' : tier === 'CRITICAL' ? 'error' : 'warning', title: t('screening_complete') },
       );
     } catch (e) {
@@ -158,7 +166,13 @@ export default function Screening({ focus = 'document' }) {
     } finally {
       setLoading(false);
     }
-  }, [documentImage, liveImage, mrzText, activePreset, uploadName, applyFocus, t]);
+  }, [documentImage, liveImage, mrzText, activePreset, uploadName, applyFocus, guidedBio, t]);
+
+  const handleGuidedVerify = useCallback((bio, frameB64) => {
+    setGuidedBio(bio);
+    setLiveImage(frameB64);
+    setResult((prev) => (prev ? { ...prev, biometrics: { ...prev.biometrics, ...bio } } : prev));
+  }, []);
 
   const handleUpload = (e) => {
     const file = e.target.files?.[0];
@@ -170,6 +184,7 @@ export default function Screening({ focus = 'document' }) {
         setActivePreset(null);
         setResult(null);
         setRecordId(null);
+        setGuidedBio(null);
       };
       reader.readAsDataURL(file);
     }
@@ -334,6 +349,13 @@ export default function Screening({ focus = 'document' }) {
               <div className="flex min-h-[190px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50">
                 {liveImage ? (
                   <img src={liveImage} alt={t('passenger_face')} className="max-h-[190px] rounded object-contain" />
+                ) : documentImage ? (
+                  <div className="w-full px-4 py-3">
+                    <BiometricVerification documentImageB64={documentImage} onComplete={handleGuidedVerify} compact />
+                    <button onClick={() => liveFileRef.current?.click()} className="mt-2 w-full text-xs font-semibold text-navy-700 hover:underline">
+                      {t('upload_photo')} / {t('scan_with_webcam')}
+                    </button>
+                  </div>
                 ) : (
                   <div className="w-full px-4 py-3 text-center">
                     <CameraCapture onCapture={(b64) => { setLiveImage(b64); if (result) runScreening(b64); }} className="mx-auto mb-1" />

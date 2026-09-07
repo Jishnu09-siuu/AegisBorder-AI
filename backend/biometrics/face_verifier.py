@@ -165,45 +165,11 @@ def compute_face_feature_vector(face_crop: np.ndarray) -> np.ndarray:
         vec = vec / norm
     return vec
 
+from biometrics.passive_pad import passive_pad_score
+
 def check_liveness_and_anti_spoofing(image_np: np.ndarray) -> Dict[str, Any]:
-    """Presentation Attack Detection (PAD)"""
-    if len(image_np.shape) == 3:
-        gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-    else:
-        gray = image_np.copy()
-        
-    f = np.fft.fft2(gray)
-    fshift = np.fft.fftshift(f)
-    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1e-5)
-    
-    h, w = gray.shape
-    center_y, center_x = h // 2, w // 2
-    r_inner = max(2, min(h, w) // 6)
-    r_outer = max(4, min(h, w) // 3)
-    
-    y, x = np.ogrid[:h, :w]
-    dist_from_center = np.sqrt((x - center_x)**2 + (y - center_y)**2)
-    ring_mask = (dist_from_center >= r_inner) & (dist_from_center <= r_outer)
-    
-    ring_vals = magnitude_spectrum[ring_mask]
-    high_freq_peaks = np.sum(ring_vals > (np.mean(magnitude_spectrum) + 2.5 * np.std(magnitude_spectrum))) if len(ring_vals) > 0 else 0
-    
-    moiré_detected = high_freq_peaks > 25
-    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-    is_blurry = laplacian_var < 40.0
-    
-    liveness_score = 95.0
-    if moiré_detected:
-        liveness_score -= 45.0
-    if is_blurry:
-        liveness_score -= 15.0
-        
-    return {
-        "liveness_score": float(max(0.0, min(100.0, liveness_score))),
-        "is_live": liveness_score >= 60.0,
-        "moire_artifact_detected": bool(moiré_detected),
-        "sharpness_index": float(round(laplacian_var, 2))
-    }
+    """Presentation Attack Detection (PAD) — shared passive scorer."""
+    return passive_pad_score(image_np)
 
 def _sface_embedding(image_np: np.ndarray, face: Dict[str, Any]) -> Optional[np.ndarray]:
     """Extract SFace 128-d embedding from a YuNet-detected face. Needs the raw

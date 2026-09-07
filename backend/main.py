@@ -1,11 +1,14 @@
 import io
 import base64
+import time
 # pyrefly: ignore [missing-import]
 import cv2
 import numpy as np
 from PIL import Image
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any, Tuple
 
@@ -18,6 +21,10 @@ from forensics.noise_analysis import analyze_noise_inconsistency
 from forensics.photo_tampering import detect_photo_replacement
 from forensics.metadata_analyzer import analyze_metadata
 from biometrics.face_verifier import verify_faces, detect_face, check_liveness_and_anti_spoofing
+from biometrics.engine import get_engine, initialize_engine
+from biometrics.sessions import session_manager
+from biometrics.utils import decode_b64_image as decode_biometric_image, InvalidImageError
+from biometrics.config import BIOMETRIC_HIGH_THRESHOLD
 from services.risk_engine import calculate_risk_score
 from services.report_generator import generate_audit_trail
 from services.url_reputation import check_url_reputation
@@ -31,10 +38,22 @@ from data.samples import (
     delete_custom_passenger
 )
 
+@asynccontextmanager
+async def _lifespan(_app):
+    try:
+        initialize_engine()
+    except Exception:
+        # BIOMETRIC_ENGINE_UNAVAILABLE is reported per-request; the rest of
+        # the screening app must keep running.
+        pass
+    yield
+
+
 app = FastAPI(
     title="AI-Based Fake Identity & Document Screening System",
     description="Automated border checkpoint screening platform with MRZ verification, tamper forensics, and biometric face matching.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=_lifespan,
 )
 
 app.add_middleware(
@@ -76,6 +95,145 @@ class AppScanRequest(BaseModel):
 class AiThreatRequest(BaseModel):
     content: str
     title: Optional[str] = None
+
+
+class BiometricSessionRequest(BaseModel):
+    document_image_b64: str
+
+
+class BiometricFrameRequest(BaseModel):
+    session_id: str
+    frame_b64: str
+
+
+class BiometricVerifyRequest(BaseModel):
+    session_id: Optional[str] = None
+    document_image_b64: Optional[str] = None
+    live_image_b64: Optional[str] = None
+
+
+def _engine_unavailable():
+    return get_engine()._unavailable()
+
+@app.get("/api/biometric/status")
+def biometric_status():
+    """Model availability + config surface. Never reports a pass when models
+    are missing — callers must gate on engine_ready."""
+    engine = get_engine()
+    return {
+        "engine_ready": engine.ready,
+        "detector": "YuNet (OpenCV Zoo, Apache-2.0)" if engine.ready else None,
+        "embedder": "SFace (OpenCV Zoo, Apache-2.0, 128-d)" if engine.ready else None,
+        "threshold": round(BIOMETRIC_HIGH_THRESHOLD, 4),
+        "error": engine.init_error,
+        "note": "InsightFace ArcFace/SCRFD weights were NOT used: they are non-commercial-research-only.",
+    }
+
+
+@app.post("/api/biometric/session")
+def biometric_session(req: BiometricSessionRequest):
+    """Start a verification session. Decodes the already-extracted document
+    portrait, then stores it in-memory (never on disk) with a randomized
+    active-liveness challenge and a TTL."""
+    engine = get_engine()
+    if not engine.ready:
+        return _engine_unavailable()
+    try:
+        doc_np = decode_biometric_image(req.document_image_b64)
+    except (InvalidImageError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    doc_state = engine.document_face_state(doc_np)
+    if not doc_state.get("found"):
+        return {
+            "success": False,
+            "error_code": "DOCUMENT_FACE_NOT_FOUND",
+            "message": "No face could be located in the document portrait.",
+        }
+    session = session_manager.create(doc_np, doc_state)
+    return {
+        "success": True,
+        "session_id": session.id,
+        "challenge": session.challenge,
+        "challenge_hint": session.tracker.hint,
+        "expires_in_s": int(session.expires_at() - time.time()),
+        "document_face": {"detected": True, "count": doc_state.get("count"), "bbox": doc_state.get("bbox")},
+        "document_quality": doc_state.get("quality"),
+    }
+
+
+@app.post("/api/biometric/liveness")
+def biometric_liveness(req: BiometricFrameRequest):
+    """Advance the active-liveness challenge with one camera frame.
+
+    Each accepted frame is quality-gated and scored against the randomized
+    challenge (head-turn direction or face-approach). Returns progress. The
+    challenge must be complete before /verify is allowed to pass.
+    """
+    engine = get_engine()
+    if not engine.ready:
+        return _engine_unavailable()
+    session = session_manager.get(req.session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Biometric session not found or expired.")
+    try:
+        frame_np = decode_biometric_image(req.frame_b64)
+    except (InvalidImageError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    inspection = engine.inspect_live_frame(frame_np)
+    if not inspection["face_detected"]:
+        return {"success": False, "error_code": "NO_FACE", "message": "No face detected. Position your face inside the camera frame.", "progress": session.tracker.status()}
+    if inspection["face_count"] > 1:
+        return {"success": False, "error_code": "MULTIPLE_FACES", "message": "Multiple faces detected. Only one person should be visible.", "progress": session.tracker.status()}
+
+    q = inspection["quality"] or {}
+    pose = inspection["pose"] or {}
+    result = session.tracker.feed(pose.get("yaw_proxy", 0.0), pose.get("interocular", 0.0), bool(q.get("pass", False)))
+    if result["passed"] and inspection["quality"] and inspection["quality"]["pass"]:
+        # remember the strongest accepted frame for the final comparison
+        if session.best_live is None or (inspection["quality"]["face_ratio"] or 0) > session.best_live_quality:
+            session.best_live = frame_np
+            session.best_live_quality = inspection["quality"]["face_ratio"] or 0
+
+    return {"success": result["passed"] or not result["failed"], **result, "quality": q, "hint": session.tracker.hint}
+
+
+@app.post("/api/biometric/verify")
+def biometric_verify(req: BiometricVerifyRequest):
+    """Final 1:1 verification.
+
+    Session path (recommended): the server uses the in-memory document image
+    from /session and requires the ACTIVE liveness challenge to have passed.
+    Convenience path: when a session_id is omitted, document_image_b64 and
+    live_image_b64 are compared with passive-only liveness (used by the
+    screening pipeline and tests).
+    """
+    engine = get_engine()
+    if not engine.ready:
+        return _engine_unavailable()
+
+    if req.session_id:
+        session = session_manager.get(req.session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="Biometric session not found or expired.")
+        try:
+            live_np = decode_biometric_image(req.live_image_b64)
+        except (InvalidImageError, ValueError) as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        session.final_live = live_np
+        result = engine.session_verify(session, live_np)
+        if result.get("success") or result.get("error_code"):
+            result["session_id"] = session.id
+        session_manager.end(session.id)
+        return result
+
+    try:
+        doc_np = decode_biometric_image(req.document_image_b64)
+        live_np = decode_biometric_image(req.live_image_b64)
+    except (InvalidImageError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return engine.compare(doc_np, live_np)
+
 
 @app.get("/api/health")
 def health_check():
@@ -341,7 +499,11 @@ def screen_document(payload: ScreeningRequest):
     if live_face_b64:
         try:
             _, live_np = decode_b64_image(live_face_b64)
-            biometric_result = verify_faces(np_img, live_np)
+            engine = get_engine()
+            if engine.ready:
+                biometric_result = engine.compare(np_img, live_np)
+            else:
+                biometric_result = verify_faces(np_img, live_np)  # legacy fallback
         except Exception:
             biometric_result = {
                 "match_score": 0.0,

@@ -27,6 +27,34 @@ export function apiScreenDocument(payload) {
   });
 }
 
+export function apiBiometricStatus() {
+  return req('/biometric/status');
+}
+
+export function apiBiometricSession(documentImageB64) {
+  return req('/biometric/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ document_image_b64: documentImageB64 })
+  });
+}
+
+export function apiBiometricLiveness(sessionId, frameB64) {
+  return req('/biometric/liveness', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId, frame_b64: frameB64 })
+  });
+}
+
+export function apiBiometricVerify(payload) {
+  return req('/biometric/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
 export function apiRegisterPassenger(payload) {
   return req('/passengers/new', {
     method: 'POST',
