@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  Fingerprint, FileCheck2, ShieldAlert, AlertTriangle, Gauge, BarChart3, CheckCircle2, ScanLine,
-  Search, FileText, BellRing, History as HistoryIcon, Settings as SettingsIcon, User, GitBranch, ArrowUpRight
+  Fingerprint, FileCheck2, ShieldAlert, AlertTriangle, Gauge, CheckCircle2, ScanLine,
+  Search, ArrowUpRight
 } from 'lucide-react';
 import { accent } from '../../components/ui';
 import { PageHeading } from '../../components/PublicSite';
@@ -63,55 +63,10 @@ const SECTIONS = [
       { label: 'Recommended decision', value: 'Grant entry', tone: 'text-emerald-700' },
     ],
   },
-  {
-    id: 'analysis', icon: GitBranch, accent: 'identity', title: 'Analysis', route: 'history',
-    tagline: 'Open a screening to inspect its signals.',
-    body: 'Every completed screening opens into a structured analysis view: detected signals, supporting evidence, contributing risk factors, threat category and the recommended decision — ready for officer review.',
-    checks: ['Per-case signal breakdown', 'Contributing risk factors', 'Threat category & severity', 'Case context & evidence'],
-  },
-  {
-    id: 'analytics', icon: BarChart3, accent: 'analytics', title: 'Analytics', route: 'analytics',
-    tagline: 'Activity, risk and trends at a glance.',
-    body: 'Operational analytics summarise screening activity, verification results, risk distribution by tier and detection trends over time — drawn from the screenings actually recorded in this workspace.',
-    checks: ['Screening activity trends', 'Verification results', 'Risk distribution by tier', 'Detection overview'],
-  },
-  {
-    id: 'reports', icon: FileText, accent: 'analytics', title: 'Reports', route: 'reports',
-    tagline: 'Per-case, printer-ready reports.',
-    body: 'Completed screenings carry a printable report with screening parameters, per-layer results, risk tier, threat category and the signed audit certificate code for traceability.',
-    checks: ['Per-case report generation', 'Screening parameters & results', 'Risk tier & threat category', 'Signed audit certificate', 'CSV export'],
-  },
-  {
-    id: 'alerts', icon: BellRing, accent: 'threat', title: 'Alerts', route: 'alerts',
-    tagline: 'Cases that need attention.',
-    body: 'Screenings that exceed low risk, and any watchlist or registry match, raise an alert with the contributing signals. Alerts are resolved as officers handle the underlying case.',
-    checks: ['High & critical risk alerts', 'Watchlist / registry matches', 'Contributing signals', 'Alert resolution workflow'],
-  },
-  {
-    id: 'history', icon: HistoryIcon, accent: 'identity', title: 'Screening History & Cases', route: 'history',
-    tagline: 'Every screening, searchable and reviewable.',
-    body: 'All screenings are kept in a searchable history — filter by risk tier, document type or decision, open any case into its full analysis, update its status and export the record.',
-    checks: ['Full screening history', 'Search & filter by risk / type / decision', 'Open case detail & analysis', 'Status updates', 'Case deletion & CSV export'],
-  },
-  {
-    id: 'profile', icon: User, accent: 'system', title: 'User Profile', route: 'profile',
-    tagline: 'Your personal operational workspace.',
-    body: 'The profile summarises your screenings, pending items, alerts, reports and recent activity, and groups account, language, motion and data preferences in one place.',
-    checks: ['Personalised overview & KPIs', 'My screenings with search & filters', 'Alert center', 'Reports & activity timeline', 'Account & preference settings'],
-  },
-  {
-    id: 'settings', icon: SettingsIcon, accent: 'system', title: 'Settings & Administration', route: 'settings',
-    tagline: 'Workspace, demo and officer controls.',
-    body: 'System settings manage the officer profile shown on records, the checkpoint label and demo-mode data, plus backend health status for the attached service.',
-    checks: ['Officer profile & checkpoint', 'Demo data mode', 'Backend connection status'],
-  },
 ];
 
 const CATEGORIES = [
   { label: 'Screening', ids: ['identity', 'document', 'fraud', 'threat', 'risk'] },
-  { label: 'Intelligence', ids: ['analysis', 'analytics', 'reports', 'alerts'] },
-  { label: 'Case management', ids: ['history'] },
-  { label: 'Account & administration', ids: ['profile', 'settings'] },
 ];
 
 export default function Features({ onNavigate }) {
