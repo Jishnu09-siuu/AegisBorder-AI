@@ -1,7 +1,14 @@
+import os
 import cv2
 import numpy as np
 from PIL import Image
 from typing import Dict, Any, Tuple, Optional
+
+## Face detectors, newest-first. cv2 5.0 dropped CascadeClassifier, so YuNet
+## is the primary detector; Haar cascade still serves cv2 4.x installs. Both
+## degrade to skin-chrominance geometry. All failures are silent by design.
+_MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
+_YUNET_PATH = os.path.join(_MODEL_DIR, "face_detection_yunet_2023mar.onnx")
 
 # Safely initialize cascade classifier if available in current cv2 build
 face_cascade = None
@@ -12,6 +19,13 @@ try:
         face_cascade = cascade_cls(cv2_data.haarcascades + 'haarcascade_frontalface_default.xml')
 except Exception:
     face_cascade = None
+
+yunet = None
+try:
+    if hasattr(cv2, 'FaceDetectorYN_create') and os.path.exists(_YUNET_PATH):
+        yunet = cv2.FaceDetectorYN_create(_YUNET_PATH, "", (320, 320), 0.5, 0.3, 5000)
+except Exception:
+    yunet = None
 
 def detect_face_by_skin_and_geometry(image_np: np.ndarray) -> Optional[Dict[str, Any]]:
     """Geometry & skin chrominance based face detector fallback"""
@@ -46,19 +60,33 @@ def detect_face_by_skin_and_geometry(image_np: np.ndarray) -> Optional[Dict[str,
                     "crop_rgb": crop
                 }
     
-    # Standard fallback passport portrait bounding box
-    fx = int(w * 0.06)
-    fy = int(h * 0.16)
-    fw = int(w * 0.30)
-    fh = int(h * 0.48)
-    crop = image_np[fy:fy+fh, fx:fx+fw]
-    return {
-        "bbox": {"x": fx, "y": fy, "width": fw, "height": fh},
-        "crop_rgb": crop
-    }
+    # Honest: if no reliable face region found, report no face.
+    # Never return a hardcoded passport-portrait bbox for arbitrary imagery.
+    return None
 
 def detect_face(image_np: np.ndarray) -> Optional[Dict[str, Any]]:
     """Detect primary face in image and return crop and bounding box"""
+    if yunet is not None and len(image_np.shape) == 3:
+        try:
+            bgr = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+            yunet.setInputSize((bgr.shape[1], bgr.shape[0]))
+            _, faces = yunet.detect(bgr)
+            if faces is not None and len(faces) > 0:
+                f = faces[0]
+                x, y, w, h = (int(v) for v in f[:4])
+                pad = int(0.12 * w)
+                x1 = max(0, x - pad)
+                y1 = max(0, y - pad)
+                x2 = min(image_np.shape[1], x + w + pad)
+                y2 = min(image_np.shape[0], y + h + pad)
+                crop = image_np[y1:y2, x1:x2]
+                return {
+                    "bbox": {"x": x, "y": y, "width": w, "height": h},
+                    "crop_rgb": crop
+                }
+        except Exception:
+            pass
+
     if len(image_np.shape) == 3:
         gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
     else:
