@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import {
-  MessageSquare, Globe, QrCode, Smartphone, Database, IdCard, FileText,
-  Search, ScanFace, ShieldAlert, FileCheck2, ArrowLeft, ShieldCheck, ServerOff, RefreshCw, BrainCircuit
+  IdCard, FileText, Search, ScanFace, ShieldAlert, FileCheck2, ArrowLeft,
+  ShieldCheck, ServerOff, RefreshCw, BrainCircuit
 } from 'lucide-react';
 import Screening from './Screening';
 import OperationCard from '../components/operations/OperationCard';
-import MessageOp from '../components/operations/MessageOp';
-import WebsiteOp from '../components/operations/WebsiteOp';
-import QrUpIOp from '../components/operations/QrUpIOp';
-import AppOp from '../components/operations/AppOp';
-import RegistryOp from '../components/operations/RegistryOp';
 import AiThreatOp from '../components/operations/AiThreatOp';
 import { Badge, SectionHeader } from '../components/ui';
 import { useT } from '../i18n';
@@ -31,19 +26,6 @@ function buildGroups(t) {
       ],
     },
     {
-      id: 'threat',
-      accent: 'threat',
-      title: t('threat_detection'),
-      description: t('threat_detection_desc'),
-      ops: [
-        { id: 'message', title: t('op_message'), icon: MessageSquare, desc: t('op_message_desc'), inputs: t('op_message_inputs'), Op: MessageOp },
-        { id: 'website', title: t('op_website'), icon: Globe, desc: t('op_website_desc'), inputs: t('op_website_inputs'), Op: WebsiteOp },
-        { id: 'qr-upi', title: t('op_qr_upi'), icon: QrCode, desc: t('op_qr_upi_desc'), inputs: t('op_qr_upi_inputs'), Op: QrUpIOp },
-        { id: 'app', title: t('op_app'), icon: Smartphone, desc: t('op_app_desc'), inputs: t('op_app_inputs'), Op: AppOp },
-        { id: 'scam-registry', title: t('op_registry'), icon: Database, desc: t('op_registry_desc'), inputs: t('op_registry_inputs'), Op: RegistryOp },
-      ],
-    },
-    {
       id: 'ai',
       accent: 'analytics',
       title: t('ai_analysis'),
@@ -57,8 +39,7 @@ function buildGroups(t) {
 
 const GROUP_ICONS = {
   identity: IdCard,
-  threat: ShieldAlert,
-  analytics: FileCheck2,
+  analytics: BrainCircuit,
 };
 
 function GroupIcon(accent) {
