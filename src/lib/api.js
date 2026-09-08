@@ -1,10 +1,30 @@
-const BASE = '/api';
+let activeBase = '/api';
+const CLOUD_FALLBACK = 'https://rakshak-ai-omega-wheat.vercel.app/api';
 
-async function req(path, options) {
-  const res = await fetch(`${BASE}${path}`, options);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.detail || `Request failed (${res.status})`);
-  return data;
+async function req(path, options = {}) {
+  try {
+    const res = await fetch(`${activeBase}${path}`, options);
+    // If local/relative /api returns 404 and we're not on localhost, fallback to live cloud API
+    if (!res.ok && res.status === 404 && activeBase === '/api' && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      activeBase = CLOUD_FALLBACK;
+      const fb = await fetch(`${activeBase}${path}`, options);
+      const data = await fb.json().catch(() => ({}));
+      if (!fb.ok) throw new Error(data.detail || `Request failed (${fb.status})`);
+      return data;
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || `Request failed (${res.status})`);
+    return data;
+  } catch (err) {
+    if (activeBase === '/api' && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      activeBase = CLOUD_FALLBACK;
+      const fb = await fetch(`${activeBase}${path}`, options);
+      const data = await fb.json().catch(() => ({}));
+      if (!fb.ok) throw new Error(data.detail || `Request failed (${fb.status})`);
+      return data;
+    }
+    throw err;
+  }
 }
 
 export function apiHealth() {
