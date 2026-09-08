@@ -8,13 +8,13 @@ import { VERIFICATIONS } from './verifications';
 const PROCESS = [
   { n: '01', title: 'Submit', text: 'Upload a document scan, paste text, or share a link.' },
   { n: '02', title: 'Verify', text: 'Document and identity verification against the portrait.' },
-  { n: '03', title: 'Analyze', text: 'Threat detection and AI pattern analysis on the input.' },
+  { n: '03', title: 'Analyze', text: 'AI pattern analysis on the input.' },
   { n: '04', title: 'Decide', text: 'A clear, recommended decision for the officer.' },
   { n: '05', title: 'Review', text: 'Structured review and a complete audit trail.' },
 ];
 
 const PILLARS = [
-  { title: 'Multi-Layer Verification', text: 'Unified screening across documents, identity, threats and AI pattern analysis — not a single signal.' },
+  { title: 'Multi-Layer Verification', text: 'Unified screening across documents, identity and AI pattern analysis — not a single signal.' },
   { title: 'Evidence-Based Decisions', text: 'Prioritise cases that require attention with tiered risk labels.' },
   { title: 'Operational Visibility', text: 'Clear screening results, case history and activity trends in one console.' },
   { title: 'Auditable Workflow', text: 'Structured review with a signed audit certificate for every completed case.' },
@@ -22,7 +22,6 @@ const PILLARS = [
 
 const PIPELINE = [
   'Document & Identity Verification',
-  'Threat Detection',
   'AI Analysis',
   'Screening Decision',
 ];
@@ -42,7 +41,7 @@ export default function Home({ onNavigate }) {
               Secure Border Screening.<br />Intelligent Verification.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600">
-              AegisBorder AI brings document and identity verification, threat detection and AI
+              AegisBorder AI brings document and identity verification and AI
               pattern analysis into one unified screening platform.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">

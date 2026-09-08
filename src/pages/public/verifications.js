@@ -1,4 +1,4 @@
-import { Fingerprint, ShieldAlert, BrainCircuit } from 'lucide-react';
+import { Fingerprint, BrainCircuit } from 'lucide-react';
 
 export const VERIFICATIONS = [
   {
@@ -27,29 +27,6 @@ export const VERIFICATIONS = [
       { label: 'Liveness', value: 'Live', tone: 'text-emerald-700' },
       { label: 'MRZ checksums', value: 'Valid', tone: 'text-emerald-700' },
       { label: 'Photo tampering', value: 'None detected', tone: 'text-emerald-700' },
-    ],
-  },
-  {
-    kind: 'threat-detection',
-    label: 'Threat Detection',
-    accent: 'threat',
-    icon: ShieldAlert,
-    eyebrow: 'On-device engines',
-    title: 'Threat Detection',
-    tagline: 'Catch scams, phishing and payment-fraud attempts before they cost anyone.',
-    blurb: 'On-device engines flag scams, phishing, payment fraud and malware — nothing you paste leaves the device.',
-    body: 'On-device engines analyze messages, websites, UPI requests, apps and registry matches for scam and social-engineering patterns. Nothing you paste is uploaded unless an operation explicitly requires the backend.',
-    checks: [
-      'SMS / WhatsApp scam patterns',
-      'Phishing & typosquat domain checks',
-      'UPI & QR request safety',
-      'APK permission & malware review',
-      'Scam registry lookups',
-    ],
-    preview: [
-      { label: 'SMS patterns', value: '12 messages', tone: 'text-emerald-700' },
-      { label: 'Message scanner', value: '3 risk signals', tone: 'text-amber-700' },
-      { label: 'Website checker', value: 'No flags', tone: 'text-emerald-700' },
     ],
   },
   {

@@ -33,7 +33,7 @@ export default function About({ onNavigate }) {
               screen.
             </p>
             <p>
-              AegisBorder AI consolidates document and identity verification, threat detection
+              AegisBorder AI consolidates document and identity verification
               and AI pattern analysis into one screening workflow — so an officer sees a clear,
               structured result instead of a pile of separate tools.
             </p>
@@ -47,8 +47,8 @@ export default function About({ onNavigate }) {
               <Layers className="h-5 w-5 text-navy-700" aria-hidden="true" />
               <h3 className="mt-3 text-sm font-extrabold text-navy-900">Defense in depth</h3>
               <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-                No single check decides a case. MRZ checks, forensics, identity match, fraud
-                correlations and threat signals are assessed as a whole.
+                No single check decides a case. MRZ checks, forensics, identity match
+                and AI pattern analysis signals are assessed as a whole.
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">

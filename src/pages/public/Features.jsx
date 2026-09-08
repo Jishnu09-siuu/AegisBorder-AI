@@ -21,7 +21,7 @@ export default function Features({ onNavigate }) {
       <PageHeading
         eyebrow="Features"
         title="AegisBorder AI Capabilities"
-        sub="Three verification areas — document and identity, threat detection, and AI analysis — in one platform."
+        sub="Core verification areas — document & identity verification and AI analysis — in one platform."
       />
 
       <div className="mx-auto max-w-6xl px-4 pb-4 lg:px-6">
