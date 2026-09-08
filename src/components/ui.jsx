@@ -1,7 +1,7 @@
-import { createElement } from 'react';
+import { createElement, useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { CheckCircle2, Info, AlertTriangle, XCircle, X, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
+import { CheckCircle2, Info, AlertTriangle, XCircle, X, Loader2, ArrowUp, ArrowDown, ShieldAlert as ShieldAlertIcon, MapPin } from 'lucide-react';
 
 export function cx(...parts) {
   return twMerge(clsx(parts));
@@ -73,7 +73,6 @@ export const STATUS = {
   fraud_suspected: { label: 'Fraud Suspected', color: 'red', icon: ShieldAlertIcon },
   critical: { label: 'Critical', color: 'rose', icon: ShieldAlertIcon },
 };
-import { ShieldAlert as ShieldAlertIcon } from 'lucide-react';
 
 const PALETTE = {
   green:  { bg: 'bg-emerald-50',  text: 'text-emerald-800',  border: 'border-emerald-200',  dot: 'bg-emerald-600', bar: 'bg-emerald-600' },
@@ -195,11 +194,41 @@ export function IconButton({ label, children, className, ...rest }) {
 }
 
 export function Modal({ open, onClose, title, children, wide, footer }) {
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.activeElement;
+    const panel = panelRef.current;
+    const focusables = () => {
+      if (!panel) return [];
+      return [...panel.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => !el.disabled && el.offsetParent !== null);
+    };
+    const first = focusables()[0];
+    (first || panel || prev)?.focus?.();
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
+      if (e.key === 'Tab') {
+        const f = focusables();
+        if (f.length === 0) return;
+        const i = f.indexOf(document.activeElement);
+        if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      if (prev && typeof prev.focus === 'function' && prev !== document.body) prev.focus();
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <button className="absolute inset-0 bg-navy-950/60" aria-label="Close dialog" onClick={onClose} />
-      <div className={cx('relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-2xl', wide ? 'max-w-4xl' : 'max-w-lg')}>
+      <div className="absolute inset-0 bg-navy-950/60" aria-hidden="true" onClick={onClose} />
+      <div ref={panelRef} className={cx('relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-2xl', wide ? 'max-w-4xl' : 'max-w-lg')}>
         <div className="flex items-center justify-between border-b border-slate-200 bg-navy-900 px-5 py-3.5 text-white">
           <h2 className="text-base font-bold tracking-tight">{title}</h2>
           <IconButton label="Close" onClick={onClose} className="text-slate-300 hover:bg-white/10 hover:text-white">
@@ -417,6 +446,244 @@ export function SeverityScale({ currentTier, labels }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------
+   Phase 1 additions — structured screening primitives.
+   Operational, light, explainable. Only surface fields the
+   backend actually produces; never invent confidence/percentages.
+   ------------------------------------------------------------ */
+
+const RISK_TIER_META = {
+  LOW:      { label: 'Verified',   color: 'green',  ring: 'ring-emerald-500' },
+  MODERATE: { label: 'Review Required', color: 'amber', ring: 'ring-amber-500' },
+  HIGH:     { label: 'High Risk',  color: 'orange', ring: 'ring-orange-500' },
+  CRITICAL: { label: 'Critical',   color: 'rose',   ring: 'ring-rose-600' },
+};
+
+export function RiskBadge({ tier, score, className }) {
+  const m = RISK_TIER_META[tier] || RISK_TIER_META.LOW;
+  const c = PALETTE[m.color] || PALETTE.slate;
+  return (
+    <span className={cx('inline-flex items-center gap-2 rounded-lg border px-3 py-1.5', c.bg, c.text, c.border, className)}>
+      <ShieldAlertIcon className="h-4 w-4" aria-hidden="true" />
+      <span className="text-sm font-extrabold">{tier}</span>
+      {score != null && <span className="text-sm font-semibold tabular-nums">{Number(score).toFixed(0)}%</span>}
+    </span>
+  );
+}
+
+const CHECK_STATE_META = {
+  pass:  { label: 'Passed',       color: 'green' },
+  warn:  { label: 'Review',       color: 'amber' },
+  fail:  { label: 'Failed',       color: 'red' },
+  none:  { label: 'Not checked',  color: 'slate' },
+  incon: { label: 'Inconclusive', color: 'blue' },
+};
+
+export function StatusGrid({ items, className }) {
+  return (
+    <ul className={cx('grid gap-2 sm:grid-cols-2 lg:grid-cols-3', className)}>
+      {items.map((it, i) => {
+        const s = CHECK_STATE_META[it.state] || CHECK_STATE_META.none;
+        const c = PALETTE[s.color] || PALETTE.slate;
+        return (
+          <li key={i} className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+            <span className={cx('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full', c.dot)} aria-hidden="true" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-800">{it.label}</span>
+                <span className={cx('rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide', c.bg, c.text)}>{s.label}</span>
+              </div>
+              {it.desc && <p className="mt-0.5 text-xs leading-snug text-slate-500">{it.desc}</p>}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+export function FindingCard({ title, where, why, severity, confidence, evidence, className }) {
+  const sevColor = { LOW: 'green', MODERATE: 'amber', HIGH: 'orange', CRITICAL: 'rose' }[severity] || 'slate';
+  return (
+    <article className={cx('rounded-lg border border-slate-200 bg-white p-4', className)}>
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+        {severity && <Badge color={sevColor}>{severity}</Badge>}
+      </div>
+      <dl className="mt-2 space-y-1 text-xs">
+        {where != null && (
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-semibold text-slate-400">Where</dt>
+            <dd className="text-slate-700">{where}</dd>
+          </div>
+        )}
+        {why && (
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-semibold text-slate-400">Why</dt>
+            <dd className="text-slate-700">{why}</dd>
+          </div>
+        )}
+        {confidence != null && (
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-semibold text-slate-400">Confidence</dt>
+            <dd className="font-mono text-slate-700">{confidence}</dd>
+          </div>
+        )}
+        {evidence != null && evidence.length > 0 && (
+          <div className="flex gap-2">
+            <dt className="shrink-0 font-semibold text-slate-400">Evidence</dt>
+            <dd className="flex flex-wrap gap-1">
+              {evidence.map((e, i) => <span key={i} className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-600">{e}</span>)}
+            </dd>
+          </div>
+        )}
+      </dl>
+    </article>
+  );
+}
+
+export function DecisionPanel({ tier, score, decision, summary, factors, className }) {
+  return (
+    <Card className={cx('overflow-hidden', tier === 'CRITICAL' && 'ring-2 ring-rose-300', className)}>
+      <div className="flex flex-col justify-between gap-4 p-5 md:flex-row md:items-center">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <RiskBadge tier={tier} score={score} />
+            <span className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-bold text-slate-700">{decision}</span>
+          </div>
+          {summary && <p className="mt-2 text-sm text-slate-600">{summary}</p>}
+        </div>
+        <div className="text-left md:text-right">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Composite risk</div>
+          <div className="text-3xl font-black tabular-nums text-navy-900">{score}<span className="text-lg text-slate-400">%</span></div>
+        </div>
+      </div>
+      {factors && factors.length > 0 && (
+        <div className="border-t border-slate-200 bg-slate-50 px-5 py-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Reasons for this decision</p>
+          <ul className="space-y-1.5">
+            {factors.map((f, i) => {
+              return (
+                <li key={i} className="flex items-start justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
+                  <span className="text-slate-700"><strong className="font-bold text-slate-900">{f.module}:</strong> {f.description}</span>
+                  {f.impact && <span className="shrink-0 text-xs font-bold text-slate-500">{f.impact}</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+export function StepRail({ steps, current, className }) {
+  return (
+    <ol className={cx('flex w-full items-center', className)} aria-label="Screening progress">
+      {steps.map((s, i) => {
+        const done = i < current;
+        const active = i === current;
+        const state = active ? 'Current' : done ? 'Complete' : 'Pending';
+        return (
+          <li key={s.key || s.label} className="flex flex-1 items-center">
+            {i > 0 && <span className={cx('mx-1.5 h-0.5 flex-1 sm:mx-2', done || active ? 'bg-navy-700' : 'bg-slate-200')} aria-hidden="true" />}
+            <div
+              className={cx('flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[11px] font-semibold sm:px-2.5 sm:py-1.5 sm:text-xs',
+                active ? 'bg-navy-800 text-white shadow-sm' : done ? 'text-navy-800' : 'text-slate-400')}
+              title={`${s.label} — ${state}`}
+            >
+              <span className={cx('flex h-5 w-5 items-center justify-center rounded-full text-[10px]',
+                active ? 'bg-white/20 text-white' : done ? 'bg-navy-100 text-navy-800' : 'bg-slate-100 text-slate-400')}>
+                {done ? '✓' : i + 1}
+              </span>
+              <span className="hidden md:inline">{s.label}</span>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+export function DocInspector({ image, regions, className }) {
+  const [selected, setSelected] = useState(regions && regions.length ? 0 : null);
+  const imgRef = useRef(null);
+  const [viewport, setViewport] = useState(null);
+
+  useEffect(() => {
+    function compute() {
+      if (imgRef.current) {
+        const r = imgRef.current.getBoundingClientRect();
+        setViewport({ w: r.width, h: r.height, nw: imgRef.current.naturalWidth, nh: imgRef.current.naturalHeight });
+      }
+    }
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [image]);
+
+  useEffect(() => {
+    if (!regions || regions.length === 0) { setSelected(null); return; }
+    if (selected == null || selected >= regions.length) setSelected(0);
+  }, [regions]);
+
+  const toPct = (num) => {
+    const n = Number(num);
+    return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+  };
+
+  return (
+    <div className={cx('grid gap-4 lg:grid-cols-2', className)}>
+      <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+        {image ? (
+          <img ref={imgRef} src={image} alt="Document under inspection" className="max-h-[420px] w-full object-contain"
+            onLoad={() => {
+              const r = imgRef.current && imgRef.current.getBoundingClientRect();
+              if (imgRef.current) setViewport({ w: r.width, h: r.height, nw: imgRef.current.naturalWidth, nh: imgRef.current.naturalHeight });
+            }} />
+        ) : (
+          <div className="flex h-64 items-center justify-center text-sm text-slate-400">No document image</div>
+        )}
+        {viewport && regions && regions.map((rg, i) => {
+          const active = selected === i;
+          const x = rg.x, y = rg.y, w = rg.width, h = rg.height;
+          if (x == null || y == null || w == null || h == null) return null;
+          const left = toPct(x) / 100 * viewport.w;
+          const top = toPct(y) / 100 * viewport.h;
+          const bw = toPct(w) / 100 * viewport.w;
+          const bh = toPct(h) / 100 * viewport.h;
+          return (
+            <button key={i} type="button" onClick={() => setSelected(i)}
+              className={cx('absolute rounded border-2 transition-all', active ? 'border-red-600 bg-red-500/10' : 'border-red-400/60 hover:bg-red-500/10')}
+              style={{ left, top, width: bw, height: bh }}
+              aria-label={`Region ${i + 1}: ${rg.type || 'anomaly'}`}
+            />
+          );
+        })}
+      </div>
+      <div className="space-y-2">
+        {(!regions || regions.length === 0) && (
+          <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">No suspicious regions were reported by the engine.</p>
+        )}
+        {regions && regions.map((rg, i) => (
+          <button key={i} type="button" onClick={() => setSelected(i)}
+            className={cx('w-full rounded-lg border p-3 text-left transition-colors',
+              selected === i ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-white hover:bg-slate-50')}>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-red-600" aria-hidden="true" />
+              <span className="text-sm font-bold text-slate-900">{rg.type || 'Suspicious region'}</span>
+              <span className="ml-auto text-[10px] font-semibold text-slate-400">{i + 1}/{regions.length}</span>
+            </div>
+            {rg.local_intensity != null && (
+              <p className="mt-1 text-xs text-slate-500">Local intensity: <span className="font-mono">{Number(rg.local_intensity).toFixed(0)}</span></p>
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );

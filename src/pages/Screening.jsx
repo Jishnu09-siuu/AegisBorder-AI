@@ -10,6 +10,7 @@ import { addToHistory, updateRecordStatus, tierMeta } from '../lib/store';
 import { toast } from '../components/Toast';
 import NewPassengerModal from '../components/NewPassengerModal';
 import CameraCapture from '../components/CameraCapture';
+import BiometricVerification from '../components/BiometricVerification';
 import AuditReport from '../components/AuditReport';
 import { speakAlert } from '../lib/voiceAlert';
 import { useT } from '../i18n';
@@ -59,6 +60,7 @@ export default function Screening({ focus = 'document' }) {
   const [showRegister, setShowRegister] = useState(false);
   const [showMrz, setShowMrz] = useState(false);
   const [docCamOn, setDocCamOn] = useState(false);
+  const [guidedBio, setGuidedBio] = useState(null);
   const fileRef = useRef(null);
   const liveFileRef = useRef(null);
   const confettiFiredRef = useRef(false);
@@ -102,13 +104,14 @@ export default function Screening({ focus = 'document' }) {
         setDocumentImage(null);
         setLiveImage(null);
         setMrzText('');
+        setGuidedBio(null);
       }
       refreshPresets();
       toast(`${holderName} ${t('removed_from_passengers')}`, { type: 'info', title: t('passenger_deleted') });
     } catch (err) {
       toast(err.message || t('could_not_remove_passenger'), { type: 'error', title: t('delete_failed') });
     }
-  }, [activePreset, refreshPresets]);
+  }, [activePreset, refreshPresets, t]);
 
   const loadPreset = useCallback(async (id) => {
     setLoading(true);
@@ -123,6 +126,7 @@ export default function Screening({ focus = 'document' }) {
       setUploadName(null);
       setResult(null);
       setRecordId(null);
+      setGuidedBio(null);
       setStep(0);
     } catch (e) {
       setError(e.message || t('failed_to_load_scenario'));
@@ -143,13 +147,17 @@ export default function Screening({ focus = 'document' }) {
     try {
       const payload = { document_image_b64: doc, live_passenger_b64: face, mrz_text_raw: mrzText };
       const data = await apiScreenDocument(payload);
-      const rc = addToHistory(data, { source: activePreset ? 'scenario' : 'live', scenario: activePreset?.title || uploadName || null });
-      setResult(data);
+      // The guided active-liveness verification is the strongest biometric
+      // evidence; when present, its result overrides the screening engine's
+      // passive-only comparison.
+      const merged = guidedBio ? { ...data, biometrics: { ...data.biometrics, ...guidedBio } } : data;
+      const rc = addToHistory(merged, { source: activePreset ? 'scenario' : 'live', scenario: activePreset?.title || uploadName || null });
+      setResult(merged);
       setRecordId(rc.id);
       applyFocus();
-      const tier = data.risk_assessment?.risk_tier || 'LOW';
+      const tier = merged.risk_assessment?.risk_tier || 'LOW';
       toast(
-        tier === 'LOW' ? t('screen_cleared') : t('screen_review', { score: data.risk_assessment?.overall_risk_score, tier }),
+        tier === 'LOW' ? t('screen_cleared') : t('screen_review', { score: merged.risk_assessment?.overall_risk_score, tier }),
         { type: tier === 'LOW' ? 'success' : tier === 'CRITICAL' ? 'error' : 'warning', title: t('screening_complete') },
       );
     } catch (e) {
@@ -158,7 +166,13 @@ export default function Screening({ focus = 'document' }) {
     } finally {
       setLoading(false);
     }
-  }, [documentImage, liveImage, mrzText, activePreset, uploadName, applyFocus, t]);
+  }, [documentImage, liveImage, mrzText, activePreset, uploadName, applyFocus, guidedBio, t]);
+
+  const handleGuidedVerify = useCallback((bio, frameB64) => {
+    setGuidedBio(bio);
+    setLiveImage(frameB64);
+    setResult((prev) => (prev ? { ...prev, biometrics: { ...prev.biometrics, ...bio } } : prev));
+  }, []);
 
   const handleUpload = (e) => {
     const file = e.target.files?.[0];
@@ -170,6 +184,7 @@ export default function Screening({ focus = 'document' }) {
         setActivePreset(null);
         setResult(null);
         setRecordId(null);
+        setGuidedBio(null);
       };
       reader.readAsDataURL(file);
     }
@@ -212,7 +227,7 @@ export default function Screening({ focus = 'document' }) {
     { name: t('chk_doc_valid'), state: docVal.is_valid ? 'pass' : 'fail', desc: docVal.is_valid ? t('chk_no_discrep') : (docVal.discrepancies || []).map((d) => d.description).join('; ') },
     { name: t('chk_forensics'), state: forensics.is_photo_tampered === false ? 'pass' : 'fail', desc: forensics.is_photo_tampered ? t('chk_tamper_detected') : t('chk_no_tamper') },
     { name: t('chk_metadata'), state: forensics.detected_software ? 'warn' : 'pass', desc: forensics.detected_software ? `${t('editing_software')}: ${forensics.detected_software.join(', ')}` : t('no_editing_traces') },
-    { name: t('chk_face'), state: bio.is_matched ? 'pass' : (bio.match_score == null ? 'warn' : 'fail'), desc: bio.match_score == null ? t('no_live_capture') : `${t('match')} ${bio.match_score}% · ${t('liveness')} ${bio.liveness?.is_live ? t('liveness_ok') : t('liveness_failed')}` },
+    { name: t('chk_face'), state: bio.biometric_available === false ? 'warn' : (bio.is_matched ? 'pass' : 'fail'), desc: bio.biometric_available === false ? t('no_live_capture') : (bio.is_matched ? `${t('match')} ${bio.match_score}% · ${t('liveness')} ${bio.liveness?.is_live ? t('liveness_ok') : t('liveness_failed')}` : `${t('match')} ${bio.match_score}% — ${bio.confidence || 'MISMATCH'}`) },
     { name: t('chk_watchlist'), state: watch.flagged ? 'fail' : 'pass', desc: watch.flagged ? (watch.alerts || []).map((a) => a.reason).join('; ') : t('no_watchlist_match') },
   ] : [];
 
@@ -334,6 +349,13 @@ export default function Screening({ focus = 'document' }) {
               <div className="flex min-h-[190px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50">
                 {liveImage ? (
                   <img src={liveImage} alt={t('passenger_face')} className="max-h-[190px] rounded object-contain" />
+                ) : documentImage ? (
+                  <div className="w-full px-4 py-3">
+                    <BiometricVerification documentImageB64={documentImage} onComplete={handleGuidedVerify} compact />
+                    <button onClick={() => liveFileRef.current?.click()} className="mt-2 w-full text-xs font-semibold text-navy-700 hover:underline">
+                      {t('upload_photo')} / {t('scan_with_webcam')}
+                    </button>
+                  </div>
                 ) : (
                   <div className="w-full px-4 py-3 text-center">
                     <CameraCapture onCapture={(b64) => { setLiveImage(b64); if (result) runScreening(b64); }} className="mx-auto mb-1" />
@@ -448,28 +470,40 @@ export default function Screening({ focus = 'document' }) {
                 </div>
               </div>
 
-              {!liveImage && (
+              {bio.biometric_available === false && (
                 <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  <strong>No live capture provided.</strong> The match score and liveness below are the engine's default reference values for document-only screening, not a live comparison.
+                  <strong>Biometric verification NOT AVAILABLE.</strong> No live passenger capture was provided, so the engine performed a document-only screening. Face match and liveness results are suppressed.
                 </div>
               )}
 
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <div className="text-xs font-semibold text-slate-500">Match score</div>
-                  <div className="text-xl font-extrabold">{bio.match_score != null ? `${bio.match_score}%` : 'No capture'}</div>
+                  {bio.biometric_available !== false ? (
+                    <div className="text-xl font-extrabold">{bio.match_score != null ? `${bio.match_score}%` : 'No comparison'}</div>
+                  ) : (
+                    <div className="text-xl font-extrabold text-slate-400">Not available</div>
+                  )}
                 </div>
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <div className="text-xs font-semibold text-slate-500">Liveness</div>
-                  <div className="text-xl font-extrabold">{bio.liveness ? (bio.liveness.is_live ? 'Live' : 'Failed') : 'No capture'}</div>
+                  {bio.biometric_available !== false ? (
+                    <div className="text-xl font-extrabold">{bio.liveness ? (bio.liveness.is_live ? 'Live' : 'Failed') : 'No capture'}</div>
+                  ) : (
+                    <div className="text-xl font-extrabold text-slate-400">Not available</div>
+                  )}
                 </div>
                 <div className="rounded-lg border border-slate-200 px-4 py-3">
                   <div className="text-xs font-semibold text-slate-500">Confidence</div>
-                  <div className="text-xl font-extrabold">{bio.confidence != null ? `${bio.confidence}%` : '—'}</div>
+                  {bio.biometric_available !== false ? (
+                    <div className="text-xl font-extrabold">{bio.confidence != null ? bio.confidence : '—'}</div>
+                  ) : (
+                    <div className="text-xl font-extrabold text-slate-400">Not available</div>
+                  )}
                 </div>
               </div>
 
-              {bio.liveness && (
+              {bio.biometric_available !== false && bio.liveness && (
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <div className="mb-2 text-xs font-bold text-slate-600">Anti-spoofing & presentation attack defense</div>
                   <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">

@@ -93,12 +93,31 @@ check("metadata tamper score range", 0 <= meta.get("metadata_tamper_score", -1) 
 print("== Section 5: Biometric Face Verification ==")
 from biometrics.face_verifier import detect_face, compute_face_feature_vector, verify_faces, check_liveness_and_anti_spoofing, detect_face_by_skin_and_geometry
 face_img = np.full((128, 128, 3), 180, dtype=np.uint8)
-det = detect_face(face_img) or detect_face_by_skin_and_geometry(face_img)
+empty = detect_face(face_img) or detect_face_by_skin_and_geometry(face_img)
+check("no face on flat gray (honest)", empty is None, str(empty)[:80])
+skin_img = np.full((128, 128, 3), (185, 145, 125), dtype=np.uint8)
+det = detect_face(skin_img) or detect_face_by_skin_and_geometry(skin_img)
 check("face detected (skin/geometry fallback)", det is not None, str(det)[:80])
 check("feature vector 128-dim-ish", compute_face_feature_vector(face_img).ndim >= 1)
 res = verify_faces(face_img, face_img)
 check("1:1 match score", 0 <= res.get("match_score", -1) <= 100)
 check("liveness/PAD suite", "liveness_score" in check_liveness_and_anti_spoofing(face_img))
+try:
+    from data.samples import get_preset_by_id
+    import cv2, base64
+    def _npf(_id):
+        _p = get_preset_by_id(_id)
+        if "image_np" in _p:
+            return _p["image_np"]
+        return cv2.imdecode(np.frombuffer(base64.b64decode(_p["image_b64"].split(",", 1)[1]), np.uint8), cv2.IMREAD_COLOR)
+    _gen = _npf("preset_genuine_passport")
+    _tam = _npf("preset_photo_tampered")
+    _self = verify_faces(_gen, _gen)
+    check("sface identical -> matched", _self.get("is_matched") is True and _self.get("match_score", 0) > 90, str(_self)[:80])
+    _cross = verify_faces(_gen, _tam)
+    check("tampered avatar -> not inflated", _cross.get("match_score", 100) < 70, str(_cross)[:80])
+except Exception as _e:
+    check("sface preset regression", False, str(_e)[:80])
 
 print("== Section 6: Unified Risk Decision Engine ==")
 from services.risk_engine import calculate_risk_score

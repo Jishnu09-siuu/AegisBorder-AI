@@ -47,11 +47,14 @@ export default function CameraCapture({ onCapture, onCancel, className = '' }) {
   const snap = () => {
     const v = videoRef.current;
     if (!v?.srcObject) return;
+    if (v.readyState < 2) return;
     const canvas = document.createElement('canvas');
     canvas.width = v.videoWidth || 640;
     canvas.height = v.videoHeight || 480;
     canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
-    onCapture(canvas.toDataURL('image/jpeg', 0.9));
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    if (!dataUrl || dataUrl.length < 200) return;
+    onCapture(dataUrl);
     stop();
   };
 

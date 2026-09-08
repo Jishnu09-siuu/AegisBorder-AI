@@ -80,26 +80,32 @@ def calculate_risk_score(
 
     # 4. Biometric Face Verification Impact
     biometric_risk = 0.0
-    match_score = biometrics_data.get("match_score", 95.0)
-    is_live = biometrics_data.get("liveness", {}).get("is_live", True)
+    biometric_available = biometrics_data.get("biometric_available", True)
     
-    if match_score < 65.0:
-        biometric_risk += (65.0 - match_score) * 2.0
-        risk_factors.append({
-            "module": "Biometrics: Face Verification",
-            "severity": "CRITICAL" if match_score < 40 else "HIGH",
-            "description": f"Face match confidence low ({match_score:.1f}% similarity)",
-            "impact": "+30 Risk Points"
-        })
-    if not is_live:
-        biometric_risk += 40.0
-        risk_factors.append({
-            "module": "Biometrics: Anti-Spoofing",
-            "severity": "CRITICAL",
-            "description": "Presentation attack detected (Potential screen replay or printed mask)",
-            "impact": "+30 Risk Points"
-        })
-    biometric_risk = min(100.0, biometric_risk)
+    if biometric_available:
+        match_score = biometrics_data.get("match_score", 0.0)
+        is_live = biometrics_data.get("liveness", {}).get("is_live", False)
+        
+        if match_score < 65.0:
+            biometric_risk += (65.0 - match_score) * 2.0
+            risk_factors.append({
+                "module": "Biometrics: Face Verification",
+                "severity": "CRITICAL" if match_score < 40 else "HIGH",
+                "description": f"Face match confidence low ({match_score:.1f}% similarity)",
+                "impact": "+30 Risk Points"
+            })
+        if not is_live:
+            biometric_risk += 40.0
+            risk_factors.append({
+                "module": "Biometrics: Anti-Spoofing",
+                "severity": "CRITICAL",
+                "description": "Presentation attack detected (Potential screen replay or printed mask)",
+                "impact": "+30 Risk Points"
+            })
+        biometric_risk = min(100.0, biometric_risk)
+    else:
+        # No live capture — biometrics not available, treat as neutral (no contribution)
+        biometric_risk = 0.0
 
     # Composite Calculation:
     # If Watchlist critical hit -> override to minimum 95

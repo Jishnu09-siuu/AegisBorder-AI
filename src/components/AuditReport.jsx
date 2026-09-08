@@ -152,8 +152,8 @@ export default function AuditReport({ screening, onClose }) {
             <Field k="ELA score" v={`${Number(forensics.ela_score ?? 0).toFixed(1)}%`} />
             <Field k="Noise discrepancy" v={`${Number(forensics.noise_discrepancy_score ?? 0).toFixed(1)}%`} />
             <Field k="Metadata tampering" v={`${Number(forensics.metadata_tamper_score ?? 0).toFixed(1)}%`} />
-            <Field k="Face match" v={bio.is_matched ? `Matched (${bio.match_score}%)` : (bio.match_score != null ? `Not matched (${bio.match_score}%)` : 'No capture')} />
-            <Field k="Liveness" v={bio.liveness?.is_live ? 'Live' : (bio.liveness ? 'Failed' : 'No capture')} />
+            <Field k="Face match" v={bio.biometric_available === false ? 'Not performed (no live capture)' : (bio.is_matched ? `Matched (${bio.match_score}%)` : (bio.match_score != null ? `Not matched (${bio.match_score}%)` : 'No capture'))} />
+            <Field k="Liveness" v={bio.biometric_available === false ? 'Not performed' : (bio.liveness?.is_live ? 'Live' : (bio.liveness ? 'Failed' : 'No capture'))} />
           </Section>
 
           <Section title="Compliance & Watchlist">

@@ -174,7 +174,7 @@ export default function GuideChat() {
             </div>
           </div>
 
-          <div ref={listRef} className="h-72 space-y-3 overflow-y-auto px-3 py-3">
+          <div ref={listRef} className="h-72 space-y-3 overflow-y-auto px-3 py-3" role="log" aria-live="polite" aria-label="Assistant messages">
             {messages.map((m, i) => (
               <div key={i} className={m.who === 'bot' ? 'mr-8' : 'ml-8'}>
                 <div className={m.who === 'bot'

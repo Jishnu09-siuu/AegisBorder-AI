@@ -45,4 +45,5 @@ backend/.venv/
 __pycache__/
 *.pyc
 backend/bcp-audit-logs/
+backend/data/biometric_audit.jsonl
 .vercel
