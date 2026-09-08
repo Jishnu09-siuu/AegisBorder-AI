@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🛡️ AegisBorder AI — Smart Border Identity & Document Screening System
+# 🛡️ AgesBorder AI (AegisBorder AI) — Smart Border Identity & Document Screening System
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Deployment-rakshak--ai--omega--wheat.vercel.app-0284c7?style=for-the-badge&logo=vercel&logoColor=white)](https://rakshak-ai-omega-wheat.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Deployment-agesborder--ai--deploy.vercel.app-0284c7?style=for-the-badge&logo=vercel&logoColor=white)](https://agesborder-ai-deploy.vercel.app/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Jishnu09--siuu%2FAegisBorder--AI-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Jishnu09-siuu/AegisBorder-AI.git)
 
 <br/>
@@ -17,7 +17,7 @@
 
 **A next-generation AI-powered document inspection, tamper forensics, and biometric facial verification platform engineered for high-throughput border checkpoints, immigration gates, and international security terminals.**
 
-### 🔗 **[Click Here to Launch Live Application](https://rakshak-ai-omega-wheat.vercel.app/)**
+### 🔗 **[Click Here to Launch Live Application](https://agesborder-ai-deploy.vercel.app/)**
 
 </div>
 
@@ -44,7 +44,7 @@
 
 The system is deployed on Vercel with automated serverless function handling and edge CDN asset distribution:
 
-👉 **Live URL:** [https://rakshak-ai-omega-wheat.vercel.app/](https://rakshak-ai-omega-wheat.vercel.app/)
+👉 **Live URL:** [https://agesborder-ai-deploy.vercel.app/](https://agesborder-ai-deploy.vercel.app/)
 
 - **Unified Single-Window Interface**: Toggle seamlessly between the **Border Screening Terminal** and the **Rakshak AI Cyber-Defense Suite**.
 - **Multi-Lingual Support**: Built-in instant language selector supporting English, हिन्दी (Hindi), and 22 Scheduled Indian Languages.
@@ -234,7 +234,7 @@ In addition to border document screening, the application includes the **Rakshak
 
 ## 🖥️ Dashboard Walkthrough & How to Test
 
-You can test the system directly on the **[Live Deployment](https://rakshak-ai-omega-wheat.vercel.app/)** or on your local machine:
+You can test the system directly on the **[Live Deployment](https://agesborder-ai-deploy.vercel.app/)** or on your local machine:
 
 1. **Select a Threat Preset**:
    - Click **`Authentic Document`**: All checksums pass, 96% face match, 12% Low Risk &rarr; **GRANT ENTRY**.

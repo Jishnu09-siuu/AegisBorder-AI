@@ -1,0 +1,6 @@
+backend/
+android-app/
+browser-extension/
+legacy-rakshak-web/
+*.pdf
+generate_*.py
